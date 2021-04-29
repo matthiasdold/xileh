@@ -11,9 +11,8 @@ from logging import Logger
 from xileh.utils.logger import xileh_log_this, DefaultLogger
 
 
-
 @pytest.fixture
-def xileh_logged_funcf():
+def xileh_logged_func():
 
     @xileh_log_this()
     def foo(logger=Logger('default')):
@@ -24,7 +23,7 @@ def xileh_logged_funcf():
 
 def test_error_if_no_logger_in_parameters():
     """ Should raise a key error """
-    with pytest.raises("KeyError"):
+    with pytest.raises(KeyError):
         @xileh_log_this()
         def foo_without_logger():
             return 0
@@ -68,4 +67,3 @@ def test_provide_custom_logging():
         return logger.name
 
     assert foo_with_custom_log_dir_w_logger() == 'custom_logger'
-
