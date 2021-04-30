@@ -70,6 +70,11 @@ def calc_foward_model(pdata, logger=Logger('FW_model')):
                                'verbose': False
                            })
 
+    raw_frame = pdata.get_by_name('raw_path')
+    trans = pdata.get_by_name('transformation')
+    src_2d = pdata.get_by_name('src')
+    bem = pdata.get_by_name('bem_solution')
+
     fwd = mne.make_forward_solution(raw_fname, trans=trans,
                                     src=src_2d, bem=bem,
                                     **cfg
