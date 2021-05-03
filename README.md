@@ -9,7 +9,7 @@ The pipeline consists of functions acting upon the pipeline data. Functions are 
 during initialization and the pipeline is later evaluated given a `pipelinedata` entity.
 
 # Schematic
-![schematic]('assets/schematic.png')
+![schematic](assets/schematic.png)
 
 ## Pipelinedata
 The `xileh.core.pipelinedata.PData` implements the pipelinedata container, which contains of three elements:
