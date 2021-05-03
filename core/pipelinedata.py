@@ -12,7 +12,7 @@ from logging import Logger
 from xileh.utils.logger import xileh_log_this
 
 
-class PData(object):
+class xPData(object):
 
     """
     The generalized pipeline data container

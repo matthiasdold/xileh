@@ -7,7 +7,8 @@ import mne
 import numpy as np
 
 from pathlib import Path
-from utils.pipelinedata import PData
+from xileh.core.pipelinedata import xPData as PData
+
 
 def basic_projection(pdata, proj_matrix):
     """ The basic projection procedure core to any
@@ -72,7 +73,6 @@ def mne_ica_filter(pdata, ica_model, filter_manual_selection=False):
     return pdata
 
 
-
 if __name__ == "__main__":
     x = np.random.randn(70, 50)
     data_dir = Path('./testing')
@@ -89,4 +89,3 @@ if __name__ == "__main__":
     pda = PData(data=r, header={'desc': 'some test data'}, meta={})
 
     pdp = mne_ica_filter(pda, ica_model)
-

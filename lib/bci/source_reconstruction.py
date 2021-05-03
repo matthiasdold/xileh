@@ -13,7 +13,7 @@ import mne
 from logging import Logger
 from xileh.utils.logger import xileh_log_this
 
-from xileh.core.pipelinedata import PData
+from xileh.core.pipelinedata import xPData as PData
 from xileh.core.pipeline import xPipeline
 
 

@@ -15,7 +15,7 @@ from scipy.io import savemat
 from pathlib import Path
 from tsfresh import extract_features
 
-from xileh.core.pipelinedata import PData
+from xileh.core.pipelinedata import xPData as PData
 
 
 def create_features(pdata, algo='c22', **kwargs):
@@ -172,7 +172,7 @@ def catch22_extraction(ts, **kwargs):
     # combine the data and cast to df
     # assert all names are aligned properly
     assert all([ftens[i]['names'] == ftens[i + 1]['names']
-               for i in range(len(ftens) - 1)])
+                for i in range(len(ftens) - 1)])
 
     # data in the form n_feat x n_variables
     # add an empty dim for n_times

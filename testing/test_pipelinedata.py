@@ -7,7 +7,7 @@
 import pytest
 
 import numpy as np
-from xileh.core.pipelinedata import PData
+from xileh.core.pipelinedata import xPData as PData
 
 
 @pytest.fixture
