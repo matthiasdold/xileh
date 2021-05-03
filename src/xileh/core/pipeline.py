@@ -6,7 +6,7 @@
 # the basic "helix" -> set of operations and data
 
 import numpy as np
-from xileh.core.pipelinedata import PData
+from xileh.core.pipelinedata import xPData as PData
 from xileh.core.features import create_features
 
 

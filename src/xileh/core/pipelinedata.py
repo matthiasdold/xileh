@@ -19,7 +19,7 @@ class xPData(object):
     """
 
     def __init__(self, data=None, header={}, meta={}, logger=None):
-        """ Create the PData object with:
+        """ Create the xPData object with:
 
         Parameters
         ----------
@@ -29,7 +29,7 @@ class xPData(object):
             usually of the form (n_variables x n_times x ...)
 
             Special usage:
-            Use a list of PData object within on PData object to pass
+            Use a list of xPData object within on xPData object to pass
             multiple data entities through a pipeline
 
             Note: More involved data types are possible, such as mne.raw
@@ -157,7 +157,7 @@ class xPData(object):
 
         Returns
         -------
-            data : PData or None
+            data : xPData or None
                 A data container with the given name or None if no container
                 with the given name can be found
 
@@ -170,7 +170,7 @@ class xPData(object):
         # Note: it is the coders responsibility to avoid conflicts with potentially
         # multiple containers having the same name in their header property
         elif isinstance(self.data, list):
-            for pd in [p for p in self.data if isinstance(p, PData)]:
+            for pd in [p for p in self.data if isinstance(p, xPData)]:
                 data = pd.get_by_name(name)
                 if data is not None:
                     break                                           # early stopping
@@ -182,7 +182,7 @@ class xPData(object):
 
 if __name__ == "__main__":
 
-    tdata = PData(
+    tdata = xPData(
         data=np.eye(5),
         header={'description': 'Some data description'},
         meta={'mean': 5}
