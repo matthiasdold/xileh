@@ -179,6 +179,20 @@ class xPData(object):
 
         return data
 
+    def overwrite(self, new_pdata):
+        """ Overwrite data, header and meta of this container by
+        referencing to a "new_data" container
+
+        Parameters
+        ----------
+        new_pdata : xPData
+            a new container to overwrite this containers content
+
+        """
+        self.data = new_pdata.data
+        self.header = new_pdata.header
+        self.meta = new_pdata.meta
+
 
 if __name__ == "__main__":
 
