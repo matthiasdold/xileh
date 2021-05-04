@@ -12,8 +12,8 @@ during initialization and the pipeline is later evaluated given a `pipelinedata`
 ![schematic](assets/schematic.png)
 
 ## Pipelinedata
-The `xileh.core.pipelinedata.PData` implements the pipelinedata container, which contains of three elements:
-1.  A data entity, usually an array or array-like. Possible also a list of other `PData` entities.
+The `xileh.core.pipelinedata.xPData` implements the pipelinedata container, which contains of three elements:
+1.  A data entity, usually an array or array-like. Possible also a list of other `xPData` entities.
 2.  Header information as a dictionary containing information about the whole data set used to describe the data in 1.
 3.  Meta information as a dictionary containing meta data about 1., such as configuration info for the processing, aggregated measure, or per record meta data. Note that if a dictionary value has a shape property, it is assumed that it should contain a per record (i.e. element of 1. / .shape[0] of 1.) info and is thus checked for its length upon initialization. So to provide an array  which does not match the length of 1. you have to pack it into an object without shape property first.
 
