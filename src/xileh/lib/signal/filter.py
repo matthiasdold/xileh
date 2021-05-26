@@ -13,7 +13,7 @@ from xileh.core.pipelinedata import xPData
 from xileh.core.pipeline import xPipeline
 
 
-def bandfilter(pdata, trg_container='', mode='append',
+def bandfilter(pdata, src_container='', mode='append',
                suffix='bandfiltered', lfilter_cfg={}):
     """ The bandfiltered info
 
@@ -21,7 +21,7 @@ def bandfilter(pdata, trg_container='', mode='append',
     ----------
     pdata : xPData
         the data container to hand over
-    trg_container : str
+    src_container : str
         name of container to work with
     mode : str, (append, inplace)
         whether to modify the container or append a suffixed version
@@ -38,7 +38,7 @@ def bandfilter(pdata, trg_container='', mode='append',
         the modified or appended container
     """
 
-    xc = pdata.get_by_name(trg_container)
+    xc = pdata.get_by_name(src_container)
 
     # if append, create new trg
     if mode == 'append':
@@ -73,7 +73,7 @@ def bandfilter(pdata, trg_container='', mode='append',
     return pdata
 
 
-def downsample(pdata, trg_container='', mode='append',
+def downsample(pdata, src_container='', mode='append',
                suffix='downsampled', downsampling_cfg={}):
     """ The bandfiltered info
 
@@ -81,7 +81,7 @@ def downsample(pdata, trg_container='', mode='append',
     ----------
     pdata : xPData
         the data container to hand over
-    trg_container : str
+    src_container : str
         name of container to work with
     mode : str, (append, inplace)
         whether to modify the container or append a suffixed version
@@ -97,7 +97,7 @@ def downsample(pdata, trg_container='', mode='append',
         the modified or appended container
     """
 
-    xc = pdata.get_by_name(trg_container)
+    xc = pdata.get_by_name(src_container)
 
     # if append, create new trg
     if mode == 'append':
@@ -204,12 +204,12 @@ if __name__ == '__main__':
     # Example within a pipeline
     pline = xPipeline('filter_and_downsample')
     pline.add_step(('bandfiltering_with_bw', bandfilter,
-                    {'trg_container': 'raw_data',
+                    {'src_container': 'raw_data',
                      'suffix': 'bf',
                      'lfilter_cfg': {'a': a, 'b': b, 'zi': zi}}))
 
     pline.add_step(('downsample_filtered', downsample,
-                    {'trg_container': 'raw_data_bf',
+                    {'src_container': 'raw_data_bf',
                      'downsampling_cfg': {'to_f': 20, 'from_f': 200}}))
 
     # pack the data
