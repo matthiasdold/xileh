@@ -17,18 +17,21 @@ class xPipeline(object):
     by scipy's pipeline
     """
 
-    def __init__(self, name):
+    def __init__(self, name, verbose=False):
         """ Setup with just populating the name for now
 
         Parameters
         ----------
         name : str
             name of the pipeline
+        verbose : bool
+            whether or not to print step on .eval()
 
 
         """
         self._name = name
         self._steps = []
+        self.verbose = verbose
 
     def add_step(self, step_foo):
         """ Add a processing step
@@ -72,7 +75,8 @@ class xPipeline(object):
         """
 
         for step in self._steps:
-            print(f"Runnning step: {step[0]}")
+            if self.verbose:
+                print(f"Runnning step: {step[0]}")
             foo = step[1]
             kwargs = step[2]
             pdata = foo(pdata, **kwargs)

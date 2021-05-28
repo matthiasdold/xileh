@@ -193,11 +193,25 @@ class xPData(object):
         self.header = new_pdata.header
         self.meta = new_pdata.meta
 
+    def get_containers(self):
+        """ Return a dict of data entity names and types """
+        name = self.header['name']
+        d = {name: type(self.data)}
+
+        # check if we have a list with potential nested xPData structs
+        if isinstance(self.data, list):
+            children = []
+            for pd in [p for p in self.data if isinstance(p, xPData)]:
+                children.append(pd.get_containers())
+            d[name] = children
+
+        return d
+
 
 if __name__ == "__main__":
 
     tdata = xPData(
         data=np.eye(5),
-        header={'description': 'Some data description'},
+        header={'name': 'testdata', 'description': 'Some data description'},
         meta={'mean': 5}
     )

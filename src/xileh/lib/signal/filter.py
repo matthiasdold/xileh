@@ -156,6 +156,10 @@ def vectorized_filter(x, b, a, zi):
         zi : np.array, (max(len(a), len(b))-1, nchan)
             the updated filter state
     """
+
+    # Operate on an internal copy of the filter state is returned
+    # to explicitply hand it over if desired
+    zii = zi.copy()
     if len(x.shape) < 2:
         x = x.reshape((-1, 1))
 
@@ -165,9 +169,9 @@ def vectorized_filter(x, b, a, zi):
     # check latest rumba etc for doing this in parallel
     for i, rec in enumerate(x.T):
         # get filtered data and persist the filter state for later use
-        fdata[:, i], zi[:, i] = signal.lfilter(b, a, rec, zi=zi[:, i])
+        fdata[:, i], zii[:, i] = signal.lfilter(b, a, rec, zi=zii[:, i])
 
-    return fdata, zi
+    return fdata, zii
 
 
 def vectorized_downsampling(x, from_f, to_f):
