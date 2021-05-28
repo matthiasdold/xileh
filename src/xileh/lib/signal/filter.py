@@ -60,7 +60,6 @@ def bandfilter(pdata, src_container='', mode='append',
             xPData(
                 np.empty(xc.data.shape),
                 header={'name': new_name},
-                meta={'lfilter_cfg': lfilter_cfg}
             )
         )
 
@@ -77,7 +76,7 @@ def bandfilter(pdata, src_container='', mode='append',
         zi = np.ones((a.shape[0]-1,))
 
     trg.data, zi_new = vectorized_filter(xc.data, b, a, zi)
-    if perserve_filter_state:
+    if store_filter_state:
         fcfg.data['zi'] = zi_new
 
     return pdata
