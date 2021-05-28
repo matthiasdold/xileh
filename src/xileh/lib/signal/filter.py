@@ -14,7 +14,8 @@ from xileh.core.pipeline import xPipeline
 
 
 def bandfilter(pdata, src_container='', mode='append',
-               suffix='bandfiltered', lfilter_cfg={}):
+               suffix='bandfiltered', lfilter_cfg_container='',
+               store_filter_state=True):
     """ The bandfiltered info
 
     Parameters
@@ -27,10 +28,12 @@ def bandfilter(pdata, src_container='', mode='append',
         whether to modify the container or append a suffixed version
     suffix : str
         suffix to use if mode=append
-    lfilter_cfg : dict, optional
-        parameters for scipy.signal.lfilter, needs to contain 'a', 'b'
-        and 'zi' with appropriate arrays. The zi will be updated if zi
-        is not none
+    lfilter_cfg_container : xPData
+        container for the filter config, containing a, b, zi
+    store_filter_state : bool
+        whether or not to write zi back to the storage container
+        effectively continuing with the last filter state on the
+        next call
 
     Returns
     -------
@@ -39,6 +42,12 @@ def bandfilter(pdata, src_container='', mode='append',
     """
 
     xc = pdata.get_by_name(src_container)
+    fcfg = pdata.get_by_name(lfilter_cfg_container)
+
+    if fcfg is None:
+        raise ValueError("Bandfilter expected a filter config in container "
+                         f"{lfilter_cfg_container} with data being a dict "
+                         "containing a, b, and zi key value pairs.")
 
     # if append, create new trg
     if mode == 'append':
@@ -59,16 +68,17 @@ def bandfilter(pdata, src_container='', mode='append',
     else:
         trg = xc
 
-    a = lfilter_cfg['a']
-    b = lfilter_cfg['b']
-    zi = lfilter_cfg['zi']
+    a = fcfg.data['a']
+    b = fcfg.data['b']
+    zi = fcfg.data['zi']
 
     if zi is None:
         # The matlab version would have been initialized with ones
         zi = np.ones((a.shape[0]-1,))
-        trg.data, _ = vectorized_filter(xc.data, b, a, zi)
-    else:
-        trg.data, lfilter_cfg = vectorized_filter(xc.data, b, a, zi)
+
+    trg.data, zi_new = vectorized_filter(xc.data, b, a, zi)
+    if perserve_filter_state:
+        fcfg.data['zi'] = zi_new
 
     return pdata
 
