@@ -100,7 +100,8 @@ class xPData(object):
 
         self._meta.update(mdict)
 
-    def update_meta(self, mdict):
+    @xileh_log_this()
+    def update_meta(self, mdict, logger=Logger('_')):
         # add to meta using the setter with dq check
         # note, the setter will use an update on the dict
         self.meta = mdict

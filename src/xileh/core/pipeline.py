@@ -4,8 +4,14 @@
 # The pipeline module implementing a pipeline
 # class, which will be a certain realization of
 # the basic "helix" -> set of operations and data
+#
+# TODO: Add a logger which stores to a "log_<pipeline_name>"
+# container
 
 import numpy as np
+
+from tqdm import tqdm
+
 from xileh.core.pipelinedata import xPData as PData
 from xileh.core.features import create_features
 
@@ -74,7 +80,9 @@ class xPipeline(object):
 
         """
 
-        for step in self._steps:
+        steps_iterator = tqdm(self._steps)
+        for step in steps_iterator:
+            steps_iterator.set_description(f"Processing step: {step[0]}")
             if self.verbose:
                 print(f"Runnning step: {step[0]}")
             foo = step[1]

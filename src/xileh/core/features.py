@@ -10,15 +10,17 @@ import mat73        # necessary for reading the hdf5 of the hctsa
 import pandas as pd
 import numpy as np
 
-from progress.bar import IncrementalBar
+# from progress.bar import IncrementalBar
 from scipy.io import savemat
 from pathlib import Path
 from tsfresh import extract_features
 
 from xileh.core.pipelinedata import xPData as PData
+from xileh.utils.logger import xileh_log_this
 
 
-def create_features(pdata, algo='c22', **kwargs):
+@xileh_log_this()
+def create_features(pdata, algo='c22', src_container=None, logger=None, **kwargs):
     """ Extract features on the provided pdatas data object
     and stores as meta data inplace of the provied pdata object
 
@@ -31,6 +33,8 @@ def create_features(pdata, algo='c22', **kwargs):
             c22 => catch22
             hctsa => hctsa using the matlab implementation
             tsfresh => tsfresh features
+    src_container : str
+        Container name to work on, if None use the outer most
     """
 
     extr_map = {
@@ -39,7 +43,10 @@ def create_features(pdata, algo='c22', **kwargs):
         'tsfresh': tsfresh_extraction
     }
 
-    tsd = pdata.data
+    if src_container is None:
+        tsd = pdata.data
+    else:
+        tsd = pdata.get_by_name(src_container).data
 
     # check if ts_dim in header (description of which index) to be
     # used to identify single time series - else assume first
@@ -52,7 +59,7 @@ def create_features(pdata, algo='c22', **kwargs):
                                            if i != idx]))
 
     feat = extr_map[algo](tsd, **kwargs)
-    pdata.update_meta = feat
+    pdata.update_meta(feat)
 
     return pdata
 
@@ -151,23 +158,21 @@ def catch22_extraction(ts, **kwargs):
     n = []
     dstore = np.empty((1, 1))       # will be recreated correctly later
 
-    with IncrementalBar('Processing catch22:', max=ts.shape[0]) as bar:
-        for i, var in enumerate(ts):
-            c22 = extractor(var)
-            c22['names'].append('var')
-            c22['values'].append(i)
+    for i, var in enumerate(ts):
+        c22 = extractor(var)
+        c22['names'].append('var')
+        c22['values'].append(i)
 
-            if i == 0:
-                # initialize the data array
-                n = c22['names']
-                d = np.array(c22['values'])
-                dstore = np.empty((d.shape[0], ts.shape[0]))
+        if i == 0:
+            # initialize the data array
+            n = c22['names']
+            d = np.array(c22['values'])
+            dstore = np.empty((d.shape[0], ts.shape[0]))
 
-            # make sure it is always the same features
-            assert n == c22['names']
+        # make sure it is always the same features
+        assert n == c22['names']
 
-            dstore[:, i] = c22['values']
-            bar.next()
+        dstore[:, i] = c22['values']
 
     # combine the data and cast to df
     # assert all names are aligned properly
