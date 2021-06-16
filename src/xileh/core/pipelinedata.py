@@ -40,6 +40,8 @@ class xPData(object):
         header : dict, optional
             general description of the data, potentially containing
             information to controll the processing flow (flags)
+            always requires a "name": <container_name> key value pair
+            at least
         meta : dict, optional
             meta data which is linked to the data as a whole or
             individual dimensional subsets. The dimesions have to be
@@ -63,6 +65,10 @@ class xPData(object):
         self.meta = meta
 
         self.logger = Logger('default')
+
+    def __repr__(self):
+        """ Print more information about the container on repl call """
+        return super().__repr__() + f"\nContainer name: {self.header['name']}"
 
     @property
     def data(self):
