@@ -27,6 +27,11 @@ def test_add_step(sample_pipeline):
     assert len(sample_pipeline._steps) == 1
 
 
+def test_get_step(sample_pipeline):
+    sample_pipeline.add_step(('c22 extract', create_features, {'algo': 'c22'}))
+    assert sample_pipeline.get_step('c22 extract') == sample_pipeline._steps[0]
+
+
 def test_remove_step(sample_pipeline):
     sample_pipeline.add_step(('c22 extract', create_features, {'algo': 'c22'}))
     sample_pipeline.remove_step('c22 extract')

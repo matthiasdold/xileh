@@ -84,7 +84,7 @@ class xPipeline(object):
         step : tuple (name, function, kwargs)
             the selected processing step
         """
-        return [t for t in self._steps if s[0] == name][0]
+        return [t for t in self._steps if t[0] == name][0]
 
     def eval(self, pdata):
         """ Run all steps in self._steps
