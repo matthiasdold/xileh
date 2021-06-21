@@ -70,6 +70,22 @@ class xPipeline(object):
 
         self._steps = [t for t in self._steps if t[0] != name]
 
+    def get_step(self, name):
+        """Get step by name
+
+        Parameters
+        ----------
+        name : str
+            step name i.e first value of the step tuple
+
+
+        Returns
+        -------
+        step : tuple (name, function, kwargs)
+            the selected processing step
+        """
+        return [t for t in self._steps if s[0] == name][0]
+
     def eval(self, pdata):
         """ Run all steps in self._steps
         Parameters
