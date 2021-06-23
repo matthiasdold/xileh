@@ -10,7 +10,8 @@ from xileh.core.features import create_features
 def sample_data():
     tdata = xPData(
         data=np.eye(5),
-        header={'description': 'Some data description'},
+        header={'name': 'TestData',
+                'description': 'Some data description'},
         meta={'mean': 5}
     )
     return tdata

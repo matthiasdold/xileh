@@ -54,6 +54,9 @@ class xPData(object):
 
 
         """
+
+        self._validate_input(data, header, meta)
+
         # init the properties
         self._data = None
         self._header = {}
@@ -70,12 +73,21 @@ class xPData(object):
         """ Print more information about the container on repl call """
         return super().__repr__() + f"\nContainer name: {self.header['name']}"
 
+    def _validate_input(self, data, header, meta):
+        """ Some DQ checks"""
+
+        assert 'name' in header.keys(), ("At least a key value pair with "
+                                         "key='name' is required in the header")
+
     @property
     def data(self):
         return self._data
 
     @data.setter
     def data(self, val):
+        # Use a list checking on names if more containers will be appended
+        if isinstance(val, list):
+            val = CheckedList(val, self)
         self._data = val
 
     @property
@@ -206,7 +218,7 @@ class xPData(object):
         d = {name: type(self.data)}
 
         # check if we have a list with potential nested xPData structs
-        if isinstance(self.data, list):
+        if isinstance(self.data, list) or isinstance(self.data, CheckedList):
             children = []
             for pd in [p for p in self.data if isinstance(p, xPData)]:
                 children.append(pd.get_containers())
@@ -214,11 +226,62 @@ class xPData(object):
 
         return d
 
+    def get_container_names(self):
+        """ Get all container names """
+        names = [self.header['name']]
+
+        # check if we have a list with potential nested xPData structs
+        if isinstance(self.data, list) or isinstance(self.data, CheckedList):
+            for pd in [p for p in self.data if isinstance(p, xPData)]:
+                names += pd.get_container_names()
+
+        return names
+
+
+class CheckedList(list):
+
+    """ A helper list class for which the append method will be linked
+        To an xPData container for checking uniqueness if an xPData
+        element is appended
+    """
+
+    def __init__(self, vals, xpdata):
+        list.__init__(self, vals)
+        self.xpdata = xpdata
+
+    def append(self, elm):
+        """ Check for name conflict if an xPData elements should be
+        appended
+
+        Parameters
+        ----------
+        elm : object
+
+        """
+        if isinstance(elm, xPData):
+            assert elm.header['name'] not in self.xpdata.get_container_names(), \
+                f"Data container '{self.xpdata}' already containes a container"\
+                f" with name '{elm.header['name']}', names need to be unique."
+
+        super(CheckedList, self).append(elm)
+
 
 if __name__ == "__main__":
 
     tdata = xPData(
-        data=np.eye(5),
+        data=[np.eye(5)],
         header={'name': 'testdata', 'description': 'Some data description'},
-        meta={'mean': 5}
+        meta={'mean_data[0]': 5}
     )
+
+    tdata.data.append(
+        xPData(
+            [xPData('a', header={'name': 'deepest'})],
+            header={'name': 'nesting'})
+    )
+
+    chk_list = CheckedList([], tdata)
+    chk_list.append('a')
+    assert chk_list == ['a']
+    chk_list.append(xPData(None, header={'name': 'deepest'}))
+    tdata.data.append(xPData(None, header={'name': 'deepest'}))
