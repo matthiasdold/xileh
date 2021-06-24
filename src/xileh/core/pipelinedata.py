@@ -18,7 +18,8 @@ class xPData(object):
     The generalized pipeline data container
     """
 
-    def __init__(self, data=None, header={}, meta={}, logger=None):
+    def __init__(self, data=None, header={},
+                 meta={}, name=None, logger=None):
         """ Create the xPData object with:
 
         Parameters
@@ -49,18 +50,28 @@ class xPData(object):
             (n_variables x n_times) and we would have meta properties
             per time recording accross all varibales, the meta element
             should be key : array.shape(1, n_times)
+        name : str
+            A container name. This is used as syntactical sugar for the constructor.
+            It will always create a field 'name' in header, to keep the logic
+            of data, header and meta clean. The 'name' will be kept as an
+            attribute only for convenience
         logger : logging.Logger
             a logger for interaction with instances of the class
 
 
         """
+        self._validate_input(data, header, meta, name)
 
-        self._validate_input(data, header, meta)
+        # Add name to header -> no overwrite as _validate_input
+        # checks for ambiguity
+        if name is not None:
+            header['name'] = name
 
         # init the properties
         self._data = None
         self._header = {}
         self._meta = {}
+        self.name = ''          # will be updated by the header setter
 
         # have the setters called on init
         self.data = data
@@ -73,11 +84,18 @@ class xPData(object):
         """ Print more information about the container on repl call """
         return super().__repr__() + f"\nContainer name: {self.header['name']}"
 
-    def _validate_input(self, data, header, meta):
+    def _validate_input(self, data, header, meta, name):
         """ Some DQ checks"""
 
-        assert 'name' in header.keys(), ("At least a key value pair with "
-                                         "key='name' is required in the header")
+        # At least on name
+        assert 'name' in header.keys() or name is not None,\
+            "At least a key value pair with key='name' is required in the header"
+
+        # Not in both
+        assert not ('name' in header.keys() and name is not None),\
+            (f"A header['name'] and a name={name} variable is provided,"
+            " please provide only one.")
+
 
     @property
     def data(self):
@@ -96,6 +114,8 @@ class xPData(object):
 
     @header.setter
     def header(self, hdict):
+        if 'name' in hdict.keys():
+            self.name = hdict['name']
         self._header.update(hdict)
 
     @property

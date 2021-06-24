@@ -7,13 +7,13 @@
 import pytest
 
 import numpy as np
-from xileh.core.pipelinedata import xPData as PData
+from xileh.core.pipelinedata import xPData
 from xileh.core.pipelinedata import CheckedList
 
 
 @pytest.fixture
 def get_test_data():
-    tdata = PData(
+    tdata = xPData(
         data=np.eye(5),
         header={'name': 'test_data',
                 'description': 'Some data description'},
@@ -24,22 +24,22 @@ def get_test_data():
 
 @pytest.fixture
 def get_nested_test_data():
-    tdata = PData(
+    tdata = xPData(
         data=[
-            PData(
+            xPData(
                 data=[
-                    PData(data=np.eye(3), header={'name': 'test'}),
-                    PData(data=[1, 23, 4],
+                    xPData(data=np.eye(3), header={'name': 'test'}),
+                    xPData(data=[1, 23, 4],
                           header={'name': 'somename'})
                 ],
                 header={'name': '1st_level_child'}
             ),
-            PData(
+            xPData(
                 data=np.ones(3),
                 header={'name': 'search_target',
                         'discription': 'We will search for this'}
             ),
-            PData(data=np.zeros(5), header={'name': 'not the target'})
+            xPData(data=np.zeros(5), header={'name': 'not the target'})
         ],
         header={'name': 'outer_container',
                 'description': 'A parent container without name'},
@@ -49,7 +49,7 @@ def get_nested_test_data():
 
 def test_init_meta():
     with pytest.raises(ValueError):
-        tdata = PData(
+        tdata = xPData(
             data=np.eye(5),
             header={'name': 'test', 'description': 'Some data description'},
             meta={'mean': np.arange(3)}
@@ -80,7 +80,7 @@ def test_header(get_test_data):
 
     # header needs to at least contain name
     with pytest.raises(AssertionError):
-        PData(None, header={})
+        xPData(None, header={})
 
 
 def test_search_by_name(get_nested_test_data):
@@ -90,7 +90,7 @@ def test_search_by_name(get_nested_test_data):
 
 
 def test_checked_list():
-    tdata = PData(None, header={'name': 'test'})
+    tdata = xPData(None, header={'name': 'test'})
 
     assert CheckedList([1, 2, 3], tdata) == [1, 2, 3]
 
@@ -99,7 +99,7 @@ def test_checked_list():
     assert chk_list == ['a']
 
     with pytest.raises(AssertionError):
-        chk_list.append(PData([1, 2, 4], header={'name': 'test'}))
+        chk_list.append(xPData([1, 2, 4], header={'name': 'test'}))
 
 
 def test_checked_list_container(get_nested_test_data):
@@ -110,4 +110,18 @@ def test_checked_list_container(get_nested_test_data):
     assert isinstance(td.data, CheckedList)
 
     with pytest.raises(AssertionError):
-        td.data.append(PData([1], header={'name': 'search_target'}))
+        td.data.append(xPData([1], header={'name': 'search_target'}))
+
+
+def test_name_attribute():
+    td = xPData(name='test')
+
+    assert td.name == 'test'
+    assert td.header['name'] == 'test'
+
+    # setter needs to overwrite attribute
+    td.header = {'name': 'another name'}
+    assert td.name == 'another name'
+
+    with pytest.raises(AssertionError):
+        td = xPData(header={'name': 'testing'}, name='testing')
