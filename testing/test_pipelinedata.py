@@ -30,7 +30,7 @@ def get_nested_test_data():
                 data=[
                     xPData(data=np.eye(3), header={'name': 'test'}),
                     xPData(data=[1, 23, 4],
-                          header={'name': 'somename'})
+                           header={'name': 'somename'})
                 ],
                 header={'name': '1st_level_child'}
             ),
@@ -123,5 +123,10 @@ def test_name_attribute():
     td.header = {'name': 'another name'}
     assert td.name == 'another name'
 
+    # setting with header and name
+    td = xPData(header={'description': 'aaaa', 'somekey': 'somevalue'},
+                name='test')
+
     with pytest.raises(AssertionError):
         td = xPData(header={'name': 'testing'}, name='testing')
+        td = xPData()   # should yield an error as no name is provided

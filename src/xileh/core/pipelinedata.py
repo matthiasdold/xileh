@@ -65,7 +65,11 @@ class xPData(object):
         # Add name to header -> no overwrite as _validate_input
         # checks for ambiguity
         if name is not None:
-            header['name'] = name
+            # header['name'] = name << this will change the class signature ...
+            nheader = header.copy()
+            nheader['name'] = name
+        else:
+            nheader = header.copy()
 
         # init the properties
         self._data = None
@@ -75,7 +79,7 @@ class xPData(object):
 
         # have the setters called on init
         self.data = data
-        self.header = header
+        self.header = nheader
         self.meta = meta
 
         self.logger = Logger('default')
@@ -94,8 +98,7 @@ class xPData(object):
         # Not in both
         assert not ('name' in header.keys() and name is not None),\
             (f"A header['name'] and a name={name} variable is provided,"
-            " please provide only one.")
-
+             " please provide only one.")
 
     @property
     def data(self):
