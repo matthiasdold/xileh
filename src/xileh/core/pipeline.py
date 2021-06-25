@@ -41,7 +41,7 @@ class xPipeline(object):
 
     def __repr__(self):
         """ Show name of repl call """
-        return super().__repr__() + f"\nPipeline name: {self.name}"
+        return super().__repr__() + f"\nPipeline name: {self._name}"
 
     def add_step(self, step_foo):
         """ Add a processing step
