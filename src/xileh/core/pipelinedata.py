@@ -188,7 +188,7 @@ class xPData(object):
         return self._check_dict(self.meta, key, logger=self.logger,
                                 dname='meta', missing=missing)
 
-    def get_by_name(self, name):
+    def get_by_name(self, name, create_if_missing=False):
         """ Traverse the data container and look for a (sub) container
         with the given name and return it if found
 
@@ -196,6 +196,9 @@ class xPData(object):
         ----------
         name : str
             name to look up in the data containers header dict
+        create_if_missing : bool
+            if no container is found, create a new one with the given name
+            and append to the self.data if it is a list, else raise Error
 
         Returns
         -------
@@ -213,10 +216,18 @@ class xPData(object):
         # multiple containers having the same name in their header property
         elif isinstance(self.data, list):
             for pd in [p for p in self.data if isinstance(p, xPData)]:
+                # create_if_missing only on outer most container
                 data = pd.get_by_name(name)
                 if data is not None:
                     break                                           # early stopping
+            # full iteration nothing found and last check
+            if data is None and create_if_missing:
+                data = xPData(None, name=name)
+                self.data.append(data)
         else:
+            if create_if_missing:
+                raise ValueError(
+                    "Cannot create for type(self.data) != list container")
             data = None
 
         return data

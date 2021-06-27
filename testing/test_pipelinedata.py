@@ -130,3 +130,16 @@ def test_name_attribute():
     with pytest.raises(AssertionError):
         td = xPData(header={'name': 'testing'}, name='testing')
         td = xPData()   # should yield an error as no name is provided
+
+
+def test_create_if_missing(get_test_data):
+    td = get_test_data
+
+    with pytest.raises(ValueError):
+        td.get_by_name('test_data_2', create_if_missing=True)
+
+    td.data = []
+    td2 = td.get_by_name('test_data2', create_if_missing=True)
+    assert isinstance(td2, xPData)
+    assert len(td.get_container_names())
+    assert td2.name == 'test_data2'
