@@ -143,3 +143,20 @@ def test_create_if_missing(get_test_data):
     assert isinstance(td2, xPData)
     assert len(td.get_container_names())
     assert td2.name == 'test_data2'
+
+
+def test__to_dict(get_nested_test_data):
+    td = get_nested_test_data           # just for brevity
+
+    dtd = td._to_dict()
+
+    # we only have one outer container
+    assert len(list(dtd.keys())) == 1, "Dict of xPData should have 1 outer key"
+    assert list(dtd.keys())[0] == td.name, "Name missmatch"
+
+    # lists conserved
+    assert (len(dtd[td.name]['data']) == len(td.data)), "Data list missmatch"
+
+    # deepest level children
+    assert (list(dtd[td.name]['data'][0].values())[0]['data'][0]
+            == td.get_by_name('1st_level_child').data[0]._to_dict())

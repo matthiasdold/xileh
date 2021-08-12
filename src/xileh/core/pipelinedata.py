@@ -51,10 +51,10 @@ class xPData(object):
             per time recording accross all varibales, the meta element
             should be key : array.shape(1, n_times)
         name : str
-            A container name. This is used as syntactical sugar for the constructor.
-            It will always create a field 'name' in header, to keep the logic
-            of data, header and meta clean. The 'name' will be kept as an
-            attribute only for convenience
+            A container name. This is used as syntactical sugar for the
+            constructor. It will always create a field 'name' in header, to
+            keep the logic of data, header and meta clean. The 'name' will be
+            kept as an attribute only for convenience
         logger : logging.Logger
             a logger for interaction with instances of the class
 
@@ -93,7 +93,8 @@ class xPData(object):
 
         # At least on name
         assert 'name' in header.keys() or name is not None,\
-            "At least a key value pair with key='name' is required in the header"
+            "At least a key value pair with key='name'"\
+            " is required in the header"
 
         # Not in both
         assert not ('name' in header.keys() and name is not None),\
@@ -211,15 +212,15 @@ class xPData(object):
         if 'name' in self.header.keys() and self.header['name'] == name:
             data = self
 
-        # if we have nested data containers, search recursively and stop at first match
-        # Note: it is the coders responsibility to avoid conflicts with potentially
+        # if we have nested data containers, search recursively and stop at first match         # noqa
+        # Note: it is the coders responsibility to avoid conflicts with potentially             # noqa
         # multiple containers having the same name in their header property
         elif isinstance(self.data, list):
             for pd in [p for p in self.data if isinstance(p, xPData)]:
                 # create_if_missing only on outer most container
                 data = pd.get_by_name(name)
                 if data is not None:
-                    break                                           # early stopping
+                    break                                     # early stopping
             # full iteration nothing found and last check
             if data is None and create_if_missing:
                 data = xPData(None, name=name)
@@ -270,6 +271,31 @@ class xPData(object):
                 names += pd.get_container_names()
 
         return names
+
+    def _to_dict(self):
+        """ Transform the container to a dictionary -> for later use of
+        storing / serializing the data
+
+        Returns
+        -------
+        rdict : dict
+            dictionary containing the data and reflecting the hierarchy of
+            the container
+        """
+
+        ddata = {}
+        # potentially child containers
+        if isinstance(self.data, list):
+            ddata['data'] = [v._to_dict() if isinstance(v, xPData) else v
+                             for v in self.data]
+        else:
+            ddata['data'] = self.data
+
+        ddata['header'] = self.header
+        ddata['meta'] = self.meta
+
+        rdict = {self.name: ddata}
+        return rdict
 
 
 class CheckedList(list):
