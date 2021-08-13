@@ -25,7 +25,9 @@ class DefaultLogger(logging.Logger):
 
         # adding a file and a channel handler
         fh = logging.FileHandler(log_file)
+        fh.setFormatter(FILE_FORMAT)
         sh = logging.StreamHandler()
+        sh.setFormatter(CONSOLE_FORMAT)
         self.addHandler(fh)
         self.addHandler(sh)
 
@@ -97,10 +99,3 @@ def xileh_log_this(custom_logger=None, log_file='/tmp/xileh.log'):
         return wrapped_f
 
     return decorator
-
-
-
-
-
-
-

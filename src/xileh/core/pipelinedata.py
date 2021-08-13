@@ -8,9 +8,6 @@
 
 import numpy as np
 
-from logging import Logger
-from xileh.utils.logger import xileh_log_this
-
 
 class xPData(object):
 
@@ -19,7 +16,7 @@ class xPData(object):
     """
 
     def __init__(self, data=None, header={},
-                 meta={}, name=None, logger=None):
+                 meta={}, name=None):
         """ Create the xPData object with:
 
         Parameters
@@ -55,8 +52,6 @@ class xPData(object):
             constructor. It will always create a field 'name' in header, to
             keep the logic of data, header and meta clean. The 'name' will be
             kept as an attribute only for convenience
-        logger : logging.Logger
-            a logger for interaction with instances of the class
 
 
         """
@@ -81,8 +76,6 @@ class xPData(object):
         self.data = data
         self.header = nheader
         self.meta = meta
-
-        self.logger = Logger('default')
 
     def __repr__(self):
         """ Print more information about the container on repl call """
@@ -142,14 +135,12 @@ class xPData(object):
 
         self._meta.update(mdict)
 
-    @xileh_log_this()
-    def update_meta(self, mdict, logger=Logger('_')):
+    def update_meta(self, mdict):
         # add to meta using the setter with dq check
         # note, the setter will use an update on the dict
         self.meta = mdict
 
-    @xileh_log_this()
-    def _check_dict(self, d, key, missing=None, logger=Logger('_'), dname=''):
+    def _check_dict(self, d, key, missing=None, dname=''):
         """ Check a dictionary and return a default 'missing' value if key
         not in dict.keys()
 
@@ -161,9 +152,6 @@ class xPData(object):
             key to look for in
         missing : object, optional
             any object to return in case lookup failed
-        logger : logging.Logger, optional
-            a logger, usually set by the xileh_log_this wrapper or
-            manually provided
         dname : str, optional
             name of the dictionary as a description
 
@@ -176,17 +164,14 @@ class xPData(object):
         if key in d.keys():
             return d[key]
         else:
-            logger.info("No {key} in pdata.{dname}  - continue with {missing}")
             return missing
 
-    @xileh_log_this()
-    def check_header(self, key, logger=Logger('_'), missing=''):
-        return self._check_dict(self.header, key, logger=self.logger,
-                                dname='header', missing=missing)
+    def check_header(self, key, missing=''):
+        return self._check_dict(self.header, key, dname='header',
+                                missing=missing)
 
-    @xileh_log_this()
-    def check_meta(self, key, logger=Logger('_'), missing=''):
-        return self._check_dict(self.meta, key, logger=self.logger,
+    def check_meta(self, key, missing=''):
+        return self._check_dict(self.meta, key,
                                 dname='meta', missing=missing)
 
     def get_by_name(self, name, create_if_missing=False):
