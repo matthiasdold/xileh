@@ -5,7 +5,6 @@
 # class, which will be a certain realization of
 # the basic "helix" -> set of operations and data
 #
-# TODO: Add a logger which stores to a "log_<pipeline_name>"
 # container
 
 import numpy as np
@@ -14,6 +13,7 @@ from tqdm import tqdm
 
 from xileh.core.pipelinedata import xPData as PData
 from xileh.core.features import create_features
+from xileh.utils.logger import PlainLogger
 
 
 class xPipeline(object):
@@ -23,7 +23,7 @@ class xPipeline(object):
     by scipy's pipeline
     """
 
-    def __init__(self, name, verbose=False):
+    def __init__(self, name, verbose=False, log_eval=bool):
         """ Setup with just populating the name for now
 
         Parameters
@@ -32,12 +32,14 @@ class xPipeline(object):
             name of the pipeline
         verbose : bool
             whether or not to print step on .eval()
-
-
+        log_eval : bool
+            whether or not to log the evaluation
         """
         self._name = name
         self._steps = []
         self.verbose = verbose
+        self._logger = PlainLogger(name + ".log")
+        self._log_eval = log_eval
 
     def __repr__(self):
         """ Show name of repl call """
@@ -101,13 +103,23 @@ class xPipeline(object):
         """
 
         steps_iterator = tqdm(self._steps)
-        for step in steps_iterator:
+        for i, step in enumerate(steps_iterator):
             steps_iterator.set_description(f"Processing step: {step[0]}")
+
+            n_of_m = f"{i + 1}/{len(self._steps)}"
+            msg = f"Runnning step {n_of_m}: {step[0]} with kwargs = {step[2]}"
+
             if self.verbose:
-                print(f"Runnning step: {step[0]}")
+                tqdm.write(msg)
+            if self._log_eval:
+                self._logger.info(msg)
+
             foo = step[1]
             kwargs = step[2]
             pdata = foo(pdata, **kwargs)
+
+            if self._log_eval:
+                self._logger.info(f"Finnished step {n_of_m}: {step[0]}")
 
 
 if __name__ == "__main__":
@@ -115,9 +127,12 @@ if __name__ == "__main__":
     tdata = PData(
         data=np.eye(5),
         header={'description': 'Some data description'},
-        meta={'mean': 5}
+        meta={'mean': 5},
+        name='testing_container'
     )
 
-    xpl = xPipeline('testp')
+    xpl = xPipeline('testp', verbose=True)
     xpl.add_step(('c22 extract', create_features, {'algo': 'c22'}))
+    xpl.add_step(('c22 extract2', create_features, {'algo': 'c22'}))
+    xpl.add_step(('c22 extract3', create_features, {'algo': 'c22'}))
     xpl.eval(tdata)

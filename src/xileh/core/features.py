@@ -16,11 +16,10 @@ from pathlib import Path
 from tsfresh import extract_features
 
 from xileh.core.pipelinedata import xPData as PData
-from xileh.utils.logger import xileh_log_this
 
 
-@xileh_log_this()
-def create_features(pdata, algo='c22', src_container=None, logger=None, **kwargs):
+def create_features(pdata, algo='c22', src_container=None, logger=None,
+                    **kwargs):
     """ Extract features on the provided pdatas data object
     and stores as meta data inplace of the provied pdata object
 

@@ -7,7 +7,11 @@
 # Definition of the pipeline logger
 #
 # Target for usage: Apply the logger as a decorator
-
+#
+# NOTE: We also implement a file logger with plain print function -->
+# reason being that the logging.Logger cannot be pickled, which would be
+# necessary to evaluate pipelines on nemo atm
+import time
 import inspect
 import functools
 import logging
@@ -99,3 +103,54 @@ def xileh_log_this(custom_logger=None, log_file='/tmp/xileh.log'):
         return wrapped_f
 
     return decorator
+
+
+class PlainLogger(object):
+
+    """ A plain logger which will write to a file (and console optionally) """
+
+    def __init__(self, logfile, console_print=False):
+        """
+        Parameters
+        ----------
+        logfile : str or Path
+            path to the desired output file
+        console_print : bool
+            whether or not to also print to the console
+        """
+        self.logfile = logfile
+
+        # Message header, can be any callable returning a str
+        self.head = self.default_msg_head
+        self.delim = ' - '
+
+        if console_print:
+            self.print = self.print_with_console
+
+    def print_with_console(self, msg):
+        print(msg)
+        print(msg, file=self.get_lf())
+
+    def print(self, msg):
+        print(msg, file=self.get_lf())
+
+    def get_lf(self):
+        """ Get the log file in write mode """
+        return open(self.logfile, 'a')
+
+    def default_msg_head(self):
+        """ The default message head to be printed """
+        return time.asctime()
+
+    def info(self, msg):
+        self.print(self.delim.join([self.head(), 'INFO', msg]))
+
+    def debug(self, msg):
+        self.print(self.delim.join([self.head(), 'DEBUG', msg]))
+
+    def warning(self, msg):
+        self.print(self.delim.join(
+            [self.head(), 'WARNING', msg]))
+
+    def error(self, msg):
+        self.print(self.delim.join([self.head(), 'ERROR', msg]))

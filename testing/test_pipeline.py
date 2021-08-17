@@ -1,9 +1,11 @@
+import os
 import pytest
 import numpy as np
 
 from xileh.core.pipeline import xPipeline
 from xileh.core.pipelinedata import xPData
 from xileh.core.features import create_features
+from xileh.utils.logger import PlainLogger
 
 
 @pytest.fixture
@@ -52,3 +54,22 @@ def test_simple_eval(sample_pipeline, sample_data):
     sample_pipeline.eval(sample_data)
     assert len([k for k in sample_data.meta.keys()
                 if k.startswith('catch22__')]) == 23
+
+
+def test_logging(sample_pipeline, sample_data):
+    sample_pipeline.add_step(('c22_1', create_features, {'algo': 'c22'}))
+    sample_pipeline.add_step(('c22_2', create_features, {'algo': 'c22'}))
+
+    sample_pipeline._log_eval = True
+    logfile = f'/tmp/{sample_pipeline._name}.log'
+
+    sample_pipeline._logger = PlainLogger(logfile)
+    sample_pipeline.eval(sample_data)
+
+    assert os.path.exists(logfile), f"No log file at {logfile}"
+
+    lines = open(logfile, 'r').readlines()
+    assert len(lines) == 4
+    assert "Finnished step 2/2: c22_2" in lines[-1]
+
+    os.remove(logfile)
