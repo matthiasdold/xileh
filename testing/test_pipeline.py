@@ -69,7 +69,7 @@ def test_logging(sample_pipeline, sample_data):
     assert os.path.exists(logfile), f"No log file at {logfile}"
 
     lines = open(logfile, 'r').readlines()
-    assert len(lines) == 4
+    assert len(lines) == 5
     assert "Finnished step 2/2: c22_2" in lines[-1]
 
     os.remove(logfile)

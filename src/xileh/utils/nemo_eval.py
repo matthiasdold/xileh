@@ -13,14 +13,22 @@
 # -> provide logging of the job and the pipelines
 # -> (potentially) also retrieve the data
 
+import copy
+import time
 import pickle
 import paramiko
 
 from pathlib import Path
 
+from subprocess import Popen
+
 from xileh.core.pipelinedata import xPData
 from xileh.core.pipeline import xPipeline
-from xileh.utils.logger import DefaultLogger
+from xileh.utils.monitoring import PipelineMonitor
+
+
+# Note: The plain logger can be pickled and sent to nemo
+from xileh.utils.logger import DefaultLogger, PlainLogger
 
 
 NEMO_EVAL_LOGGER = DefaultLogger('nemo_eval_logger',
@@ -33,10 +41,11 @@ def get_default_config():
         'nemo_host': 'login1.nemo.uni-freiburg.de',          # login node
         'nemo_user': 'fr_md1104',
         'nemo_log_dir': Path('/home/fr/fr_fr/fr_md1104/logs'),
+        'local_log_dir': Path('/tmp/nemo_eval/'),
         # for data transfer
         'nemo_shared_dir': Path('/home/fr/fr_fr/fr_md1104/tmp'),
         'local_pickle_tmp': Path('/tmp'),
-        'singularity_container_home': '/work/ws/nemo/fr_md1104-singularity_container_0'      # noqa
+        'singularity_container': '/work/ws/nemo/fr_md1104-singularity_container_0/workingvenv39.sif'      # noqa
     }
     return conf
 
@@ -58,8 +67,6 @@ while [ "${1}" != "" ]; do
         -d | --data)   			shift
                     DATA_FILE=${1}
                                     ;;
-    -s | --singularity_path)	shift
-                    SINGULARITY_PATH=${1};;
     * ) echo "illegal ARGUMENT ${1}"
     esac
     shift
@@ -69,8 +76,9 @@ echo "Loading singularity"
 module load tools/singularity/3.5
 
 # Note: make sure that the container is executeable
-singularity exec $SINGULARITY_PATH/moabb_container_stups.simg python -c \
-"import pickle; pl=pickle.load(open('$PIPELINE_FILE', 'rb')); data=pickle.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
+singularity exec <SINGULARITY_CONTAINER> python -c \
+"import pickle; pl=pickle.load(open('$PIPELINE_FILE', 'rb')); \
+    data=pickle.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
 '''
 
     return script
@@ -101,6 +109,39 @@ def validate_data(pdata,
             == len(pdata.get_by_name(data_container).data)), "Pipelines "\
         f" in '{pl_container}' and data in '{data_container}' do not match up"
 
+    # pipelines are unique --> required for 1 to 1 logging
+    pl_hashes = [(pl, pl.__hash__(), pl._name) for
+                 pl in pdata.get_by_name(pl_container).data]
+    non_uniques = [plh for plh in set(pl_hashes) if pl_hashes.count(plh) > 1]
+    names = [plh[2] for plh in pl_hashes]
+    non_unique_n = [n for n in set(names) if names.count(n) > 1]
+    assert non_uniques == [], "Pipelines in list have to be unique -> copy and"\
+        f" change the names for: {non_uniques}"
+    assert non_unique_n == [], "Pipeline names have to be unique -> copy and"\
+        f" change names for: {non_unique_n}"
+
+    return pdata
+
+
+def attach_log_files(pdata):
+    """ make sure each pipeline is logging to the log dir in config """
+
+    conf = pdata.get_by_name('nemo_config').data
+    pls = pdata.get_by_name('pipelines').data
+
+    nemo_log_files = []
+    local_log_files = []
+    for pl in pls:
+        pl._log_eval = True
+        fname = pl._name.replace(' ', '_') + '.log'
+        nemo_fpath = conf['nemo_log_dir'].joinpath(fname)
+        pl._logger = PlainLogger(nemo_fpath)
+        nemo_log_files.append(nemo_fpath)
+        local_log_files.append(conf['local_log_dir'].joinpath(fname))
+
+    pdata.get_by_name('pipelines').meta['nemo_logs'] = nemo_log_files
+    pdata.get_by_name('pipelines').meta['local_logs'] = local_log_files
+
     return pdata
 
 
@@ -117,6 +158,8 @@ def start_connection_to_nemo(conf):
     ssh_client.connect(hostname=conf['nemo_host'],
                        username=conf['nemo_user'], pkey=k)
 
+    assert ssh_client is not None, "Could not establish ssh connection to "\
+        "nemo - is vpn running?"
     # stdin, stdout, stderr = ssh.exec_command('ls -l')
     # stdout.read()
 
@@ -181,7 +224,10 @@ def transfer_local_to_nemo(ssh_client, conf, file_dict):
     script_remote_fl = conf['nemo_shared_dir'].joinpath(
         script_local_tmp_fl.stem + script_local_tmp_fl.suffix)
     # script_local_tmp_fl.chmod(0x777)
-    open(script_local_tmp_fl, 'w').write(get_eval_sh())
+    open(script_local_tmp_fl, 'w').write(
+        get_eval_sh().replace('<SINGULARITY_CONTAINER>',
+                              conf['singularity_container']))
+
     ftp_client.put(str(script_local_tmp_fl),
                    str(script_remote_fl))
 
@@ -199,17 +245,26 @@ def send_data_to_nemo(pdata):
 
     transfer_local_to_nemo(ssh_client, conf, file_dict)
 
+    return pdata
+
 
 def initialize_ssh_connection_to_nemo(pdata, trg_container='ssh_client'):
     conf = pdata.get_by_name('nemo_config').data
     trg = pdata.get_by_name(trg_container, create_if_missing=True)
+    ssh_client = start_connection_to_nemo(conf)
 
-    trg.data = start_connection_to_nemo(conf)
+    # now make sure that nemo and local log dirs exists
+    pls_meta = pdata.get_by_name('pipelines').meta
+    nemo_log_dir = str(pls_meta['nemo_logs'][0].parent)
+    _, _, _ = ssh_client.exec_command(f'mkdir -p {nemo_log_dir}')
+    pls_meta['local_logs'][0].parent.mkdir(exist_ok=True, parents=True)
+
+    trg.data = ssh_client
 
     return pdata
 
 
-def send_eval_jobs_to_nemo(pdata, jobs_container='nemo_jobs'):
+def send_eval_jobs_to_nemo(pdata, jobs_container='jobs'):
     """ Create individual jobs for each pipeline/data pair from the containers
     """
 
@@ -230,8 +285,16 @@ def send_eval_jobs_to_nemo(pdata, jobs_container='nemo_jobs'):
                   for d in data
                   ]
 
+    jobs = []
+
     for pl_f, data_f in zip(pls_files, data_files):
         job_id = start_job(ssh_client, conf, pl_f, data_f)
+        jobs.append(job_id)
+
+    trg = pdata.get_by_name(jobs_container, create_if_missing=True)
+    trg.data = jobs
+
+    return pdata
 
 
 def start_job(ssh_client, conf, pl_file, data_file):
@@ -247,8 +310,7 @@ def start_job(ssh_client, conf, pl_file, data_file):
         'eval_single_pipeline.sh'))
 
     # define the parameters to be passed to the script
-    script_flags = f'-pl {pl_file} -d {data_file} '\
-        f' -s {conf["singularity_container_home"]}'
+    script_flags = f'-pl {pl_file} -d {data_file}'
 
     stdin, stdout, stderr = ssh_client.exec_command(
         f'msub -o {log_file} -e {log_file} -v SCRIPT_FLAGS="{script_flags}"'
@@ -267,15 +329,69 @@ def start_job(ssh_client, conf, pl_file, data_file):
     return job_id
 
 
+def mirror_log_files(pdata):
+    """ Use tail -f to pipe from remote to local log files """
+
+    conf = pdata.get_by_name('nemo_config').data
+    pls_meta = pdata.get_by_name('pipelines').meta
+    cmd_template = (f"ssh -i {conf['ssh_key_file']} {conf['nemo_user']}"
+                    f"@{conf['nemo_host']} tail -f <remote_log_file> "
+                    "> <local_log_file>")
+
+    ssh_client = pdata.get_by_name('ssh_client').data
+    procs = []
+
+    for nemo_log_file, local_log_file in zip(
+            pls_meta['nemo_logs'], pls_meta['local_logs']):
+
+        # touch files to make sure they are there if no print has happened yet
+        # e.g because job is still in queue
+        ssh_client.exec_command(f"touch {nemo_log_file}")
+        local_log_file.touch()
+
+        # Start mirroring processes
+        procs.append(
+            Popen(cmd_template
+                  .replace('<remote_log_file>', str(nemo_log_file))
+                  .replace('<local_log_file>', str(local_log_file))
+                  )
+        )
+
+    trg = pdata.get_by_name('tail_procs', create_if_missing=True)
+    trg.data = procs
+
+    return pdata
+
+
+def stop_mirror_log_files(pdata):
+    for p in pdata.get_by_name('procs').data:
+        p.terminate()
+
+
 def start_monitoring(pdata):
     """ Check the log files for the jobs by continously monitoring them
     over ssh via tail -f
     """
-    pass
+    pls_c = pdata.get_by_name('pipelines')
+    logfiles = pls_c.meta['local_logs']
+    job_ids = pdata.get_by_name('jobs')
+    names = [f.stem + '_' + id for f, id in zip(logfiles, job_ids)]
+    monitor = PipelineMonitor(logfiles=logfiles, names=names)
+
+    # This will run until all pipelines are finished (last step in logs)
+    # or manual interupt is sent
+    monitor.show()
+
+    return pdata
 
 
 def test_print(pdata):
     print(pdata.get_containers())
+    return pdata
+
+
+def test_sleep(pdata):
+    time.sleep(30)
     return pdata
 
 
@@ -284,25 +400,37 @@ def test_print(pdata):
 # ==============================================================================
 eval_pl = xPipeline('eval_on_nemo_pl')
 eval_pl.add_step(('Check the input', validate_data, {}))
+eval_pl.add_step(('Attach logs', attach_log_files, {}))
 eval_pl.add_step(('Initialize ssh connection',
                   initialize_ssh_connection_to_nemo, {}))
-eval_pl.add_step(('Send data to nemo',
-                  send_data_to_nemo, {}))
+eval_pl.add_step(('Send data to nemo', send_data_to_nemo, {}))
+eval_pl.add_step(('Eval jobs on nemo', send_eval_jobs_to_nemo, {}))
+eval_pl.add_step(('Mirror log files', mirror_log_files, {}))
+eval_pl.add_step(('Start monitoring', start_monitoring, {}))
+eval_pl.add_step(('Stop mirroring', stop_mirror_log_files, {}))
 
 
 if __name__ == '__main__':
 
     testpl = xPipeline('testpipeline')
     testpl.add_step(('testprint', test_print, {}))
-    testpl2 = xPipeline('testpipeline')
-    testpl2.add_step(('testprint', test_print, {}))
+    testpl.add_step(('testsleet', test_sleep, {}))
+    testpl.add_step(('testprint 2', test_print, {}))
+
+    testpl2 = copy.deepcopy(testpl)
+    testpl3 = copy.deepcopy(testpl)
+    testpl2._name = 'testpipeline2'
+    testpl3._name = 'testpipeline3'
+
     testdt = xPData([1, 2, 3], name='testdata')
     testdt2 = xPData([1, 2, 3, 4], name='testdata')
 
     pdata = xPData(
         [
             xPData(get_default_config(), name='nemo_config'),
-            xPData([testpl, testpl2, testpl], name='pipelines'),
+            # NOTE: Pipelines have to be unique (at least different names)
+            # as this is required for monitoring the remote logging state
+            xPData([testpl, testpl2, testpl3], name='pipelines'),
             xPData([testdt, testdt2, testdt], name='data'),
         ],
         name='eval_on_nemo_data'

@@ -101,6 +101,9 @@ class xPipeline(object):
                 Return the pipelined data after running through all steps
 
         """
+        if self._log_eval:
+            self._logger.info(f"Evaluating pipeline <{self.__hash__()}> with"
+                              f" data <{pdata.__hash__()}>")
 
         steps_iterator = tqdm(self._steps)
         for i, step in enumerate(steps_iterator):
