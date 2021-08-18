@@ -16,6 +16,8 @@ import inspect
 import functools
 import logging
 
+from tqdm import tqdm
+
 FILE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 CONSOLE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
@@ -109,7 +111,7 @@ class PlainLogger(object):
 
     """ A plain logger which will write to a file (and console optionally) """
 
-    def __init__(self, logfile, console_print=False):
+    def __init__(self, logfile, console_print=False, use_tqdm=True):
         """
         Parameters
         ----------
@@ -117,6 +119,8 @@ class PlainLogger(object):
             path to the desired output file
         console_print : bool
             whether or not to also print to the console
+        use_tqdm : bool
+            whether or not to use tqdm.write intead of print
         """
         self.logfile = logfile
 
@@ -125,7 +129,14 @@ class PlainLogger(object):
         self.delim = ' - '
 
         if console_print:
-            self.print = self.print_with_console
+            if use_tqdm:
+                self.print = self.print_with_console_tqdm
+            else:
+                self.print = self.print_with_console
+
+    def print_with_console_tqdm(self, msg):
+        tqdm.write(msg)
+        print(msg, file=self.get_lf())
 
     def print_with_console(self, msg):
         print(msg)

@@ -13,9 +13,10 @@
 # -> provide logging of the job and the pipelines
 # -> (potentially) also retrieve the data
 
+import os
 import copy
 import time
-import pickle
+import dill
 import paramiko
 
 from pathlib import Path
@@ -25,6 +26,7 @@ from subprocess import Popen
 from xileh.core.pipelinedata import xPData
 from xileh.core.pipeline import xPipeline
 from xileh.utils.monitoring import PipelineMonitor
+from xileh.utils.pickle_tools import pipeline_dependencies
 
 
 # Note: The plain logger can be pickled and sent to nemo
@@ -53,6 +55,12 @@ def get_default_config():
 def get_eval_sh():
 
     script = '''#!/bin/env bash
+# Note: for testing this script you can start an interacitve session and run
+# it against some copied pickles
+#
+# msub  -I  -V  -l nodes=1:ppn=1,pmem=5000mb -l walltime=0:02:00:00
+# ./eval_single_pipeline.sh -pl pipeline.pickle -d data.pickle
+
 if [ -n "${SCRIPT_FLAGS}" ] ; then
     if [ -z "${*}" ]; then
         set -- ${SCRIPT_FLAGS}
@@ -62,11 +70,11 @@ fi
 while [ "${1}" != "" ]; do
     case ${1} in
     -pl | --pipeline)		shift
-                    PIPELINE_FILE=${1}
-                                    ;;
-        -d | --data)   			shift
-                    DATA_FILE=${1}
-                                    ;;
+                            PIPELINE_FILE=${1}
+                            ;;
+        -d | --data)   	    shift
+                            DATA_FILE=${1}
+                            ;;
     * ) echo "illegal ARGUMENT ${1}"
     esac
     shift
@@ -75,10 +83,13 @@ done
 echo "Loading singularity"
 module load tools/singularity/3.5
 
+# work in the nemo shared dir
+cd <NEMO_SHARED_DIR>
+
 # Note: make sure that the container is executeable
 singularity exec <SINGULARITY_CONTAINER> python -c \
-"import pickle; pl=pickle.load(open('$PIPELINE_FILE', 'rb')); \
-    data=pickle.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
+"import pickle; pl=dill.load(open('$PIPELINE_FILE', 'rb')); \
+ data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
 '''
 
     return script
@@ -196,18 +207,18 @@ def pack_pipelines_and_data_to_pickle(pdata):
     data_files = []
     for pl in upls:
         fname = f'pipeline_{pl.__hash__()}.pickle'
-        pickle.dump(pl, open(conf['local_pickle_tmp'].joinpath(fname), 'wb'))
+        dill.dump(pl, open(conf['local_pickle_tmp'].joinpath(fname), 'wb'))
         pipeline_files.append(fname)
     for ud in udata:
         fname = f'data_{ud.__hash__()}.pickle'
-        pickle.dump(ud, open(conf['local_pickle_tmp'].joinpath(fname), 'wb'))
+        dill.dump(ud, open(conf['local_pickle_tmp'].joinpath(fname), 'wb'))
         data_files.append(fname)
 
     return {'pipeline_files': pipeline_files, 'data_files': data_files}
 
 
-def transfer_local_to_nemo(ssh_client, conf, file_dict):
-    NEMO_EVAL_LOGGER.info("Transfering files")
+def transfer_pickles_local_to_nemo(ssh_client, conf, file_dict):
+    NEMO_EVAL_LOGGER.info("Transfering pickle files")
     ftp_client = ssh_client.open_sftp()
     local_tmp = conf['local_pickle_tmp']
     target_dir = conf['nemo_shared_dir']
@@ -226,7 +237,10 @@ def transfer_local_to_nemo(ssh_client, conf, file_dict):
     # script_local_tmp_fl.chmod(0x777)
     open(script_local_tmp_fl, 'w').write(
         get_eval_sh().replace('<SINGULARITY_CONTAINER>',
-                              conf['singularity_container']))
+                              conf['singularity_container'])
+        .replace('<NEMO_SHARED_DIR>',
+                 conf['nemo_shared_dir'])
+    )
 
     ftp_client.put(str(script_local_tmp_fl),
                    str(script_remote_fl))
@@ -236,14 +250,44 @@ def transfer_local_to_nemo(ssh_client, conf, file_dict):
     ftp_client.close()
 
 
+def transfer_pipeline_dependencies(pdata):
+
+    NEMO_EVAL_LOGGER.info("Transfering necessary modules")
+
+    conf = pdata.get_by_name('nemo_config').data
+
+    needed_modules = []
+    for pl in pdata.get_by_name('pipelines').data:
+        needed_modules += pipeline_dependencies(pl)
+
+    needed_modules_paths = list(set(needed_modules))      # only unique ones
+
+    # use rsync as we want to glob for *.py
+    cmd = (f'rsync -Pavz --exclude=".*" --include="*/" --include="*.py" '
+           f'--exclude="*" -e "ssh -i {conf["ssh_key_file"]}" <src_dir>'
+           f' fr_md1104@login1.nemo.uni-freiburg.de:{conf["nemo_shared_dir"]}'
+           )
+
+    for pth in needed_modules_paths:
+        os.system(cmd.replace('<src_dir>', str(pth)))
+
+
 def send_data_to_nemo(pdata):
 
     conf = pdata.get_by_name('nemo_config').data
     ssh_client = pdata.get_by_name('ssh_client').data
+
+    # create the folders
     prepare_for_transfer(conf, ssh_client=ssh_client)
+
+    # pack at local folder and return a map
     file_dict = pack_pipelines_and_data_to_pickle(pdata)
 
-    transfer_local_to_nemo(ssh_client, conf, file_dict)
+    # transfer pickles
+    transfer_pickles_local_to_nemo(ssh_client, conf, file_dict)
+
+    # also transfer any module dependencies
+    transfer_pipeline_dependencies(pdata)
 
     return pdata
 
@@ -291,6 +335,7 @@ def send_eval_jobs_to_nemo(pdata, jobs_container='jobs'):
         job_id = start_job(ssh_client, conf, pl_f, data_f)
         jobs.append(job_id)
 
+    NEMO_EVAL_LOGGER.info(f"Started {len(jobs)} with ids: {jobs}")
     trg = pdata.get_by_name(jobs_container, create_if_missing=True)
     trg.data = jobs
 
@@ -335,8 +380,7 @@ def mirror_log_files(pdata):
     conf = pdata.get_by_name('nemo_config').data
     pls_meta = pdata.get_by_name('pipelines').meta
     cmd_template = (f"ssh -i {conf['ssh_key_file']} {conf['nemo_user']}"
-                    f"@{conf['nemo_host']} tail -f <remote_log_file> "
-                    "> <local_log_file>")
+                    f"@{conf['nemo_host']} tail -f <remote_log_file>")
 
     ssh_client = pdata.get_by_name('ssh_client').data
     procs = []
@@ -353,7 +397,8 @@ def mirror_log_files(pdata):
         procs.append(
             Popen(cmd_template
                   .replace('<remote_log_file>', str(nemo_log_file))
-                  .replace('<local_log_file>', str(local_log_file))
+                  .split(" "),          # popen requires a list of args
+                  stdout=open(local_log_file, 'w')
                   )
         )
 
@@ -364,7 +409,7 @@ def mirror_log_files(pdata):
 
 
 def stop_mirror_log_files(pdata):
-    for p in pdata.get_by_name('procs').data:
+    for p in pdata.get_by_name('tail_procs').data:
         p.terminate()
 
 
@@ -374,14 +419,18 @@ def start_monitoring(pdata):
     """
     pls_c = pdata.get_by_name('pipelines')
     logfiles = pls_c.meta['local_logs']
-    job_ids = pdata.get_by_name('jobs')
-    names = [f.stem + '_' + id for f, id in zip(logfiles, job_ids)]
+    job_ids = pdata.get_by_name('jobs').data
+    names = [f.stem + '_' + str(id) for f, id in zip(logfiles, job_ids)]
     monitor = PipelineMonitor(logfiles=logfiles, names=names)
 
     # This will run until all pipelines are finished (last step in logs)
     # or manual interupt is sent
     monitor.show()
 
+    return pdata
+
+
+def clean_tmp_files(pdata):
     return pdata
 
 
@@ -408,6 +457,7 @@ eval_pl.add_step(('Eval jobs on nemo', send_eval_jobs_to_nemo, {}))
 eval_pl.add_step(('Mirror log files', mirror_log_files, {}))
 eval_pl.add_step(('Start monitoring', start_monitoring, {}))
 eval_pl.add_step(('Stop mirroring', stop_mirror_log_files, {}))
+eval_pl.add_step(('Clean tmp files', clean_tmp_files, {}))
 
 
 if __name__ == '__main__':
