@@ -8,8 +8,8 @@
 # multiple pipelines being executed in either subprocesses and/or remotely
 
 import re
+import time
 
-from time import sleep
 from tqdm import tqdm
 
 
@@ -69,9 +69,13 @@ class PipelineMonitor(object):
 
     def check_logs(self):
         """ Read the logs and check the last finished step """
+        tqdm.write(
+            f"Checking logfiles - {self._logfiles} - time:"
+            f" {time.strftime('%Y%m%d_%H%M%S')}")
         for i, lf in enumerate(self._logfiles):
             text = open(lf, 'r').read()
-            step_info = re.findall(r'Finished step (\d*)/(\d*)', text)
+            step_info = re.findall(r'Finnished step (\d*)/(\d*)', text)
+            tqdm.write(f"Step info is: {step_info}")
 
             # if at least one step finished, update the state
             if step_info != []:
@@ -92,7 +96,7 @@ class PipelineMonitor(object):
         while 1:
             self.check_logs()
             self.update_bars()
-            sleep(self._check_freq)
+            time.sleep(self._check_freq)
 
             # check if all are finished
             totals = [b.total for b in self.bars]
@@ -122,14 +126,14 @@ if __name__ == '__main__':
             tqdm.write(msg, file=open(logf, 'a'))
             tqdm.write(f"Finished step {i + 1}/{iterations}",
                        file=open(logf, 'a'))
-            sleep(random.uniform(0.5, sleep_for))
+            time.sleep(random.uniform(0.5, sleep_for))
 
     pool = Pool(len(logfs))
     for i in range(len(logfs)):
         pool.apply_async(print_to_log, args=(logfs[i],))
 
     # wait for files to be written for the first time
-    sleep(2)
+    time.sleep(2)
 
     m = PipelineMonitor(logfiles=logfs)
     m.show()

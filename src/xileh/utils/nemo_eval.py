@@ -15,18 +15,17 @@
 
 import os
 import copy
-import time
 import dill
 import paramiko
+import inspect
 
 from pathlib import Path
-
+from time import sleep
 from subprocess import Popen
 
 from xileh.core.pipelinedata import xPData
 from xileh.core.pipeline import xPipeline
 from xileh.utils.monitoring import PipelineMonitor
-from xileh.utils.pickle_tools import pipeline_dependencies
 
 
 # Note: The plain logger can be pickled and sent to nemo
@@ -47,7 +46,13 @@ def get_default_config():
         # for data transfer
         'nemo_shared_dir': Path('/home/fr/fr_fr/fr_md1104/tmp'),
         'local_pickle_tmp': Path('/tmp'),
-        'singularity_container': '/work/ws/nemo/fr_md1104-singularity_container_0/workingvenv39.sif'      # noqa
+        'singularity_container': Path('/work/ws/nemo/fr_md1104-singularity_container-0/workingvenv39.sif'),      # noqa
+        # For unpickling to be possible, we need the scripts, including __main__
+        # Everything from the parent directory of __main__ downwards will be
+        # copied to local_log_dir on the remote host
+        '__main__': Path('/home/doda/workspace/python/xileh/src/xileh/utils/nemo_eval.py'),                      # noqa
+        # Take all the script roots from this list and copy all *.py
+        'script_paths_to_copy': []
     }
     return conf
 
@@ -55,42 +60,40 @@ def get_default_config():
 def get_eval_sh():
 
     script = '''#!/bin/env bash
-# Note: for testing this script you can start an interacitve session and run
-# it against some copied pickles
-#
-# msub  -I  -V  -l nodes=1:ppn=1,pmem=5000mb -l walltime=0:02:00:00
-# ./eval_single_pipeline.sh -pl pipeline.pickle -d data.pickle
+                # Note: for testing this script you can start an interacitve session and run
+                # it against some copied pickles
+                #
+                # msub  -I  -V  -l nodes=1:ppn=1,pmem=5000mb -l walltime=0:02:00:00
+                # ./eval_single_pipeline.sh -pl pipeline.pickle -d data.pickle
 
-if [ -n "${SCRIPT_FLAGS}" ] ; then
-    if [ -z "${*}" ]; then
-        set -- ${SCRIPT_FLAGS}
-    fi
-fi
+                if [ -n "${SCRIPT_FLAGS}" ] ; then
+                    if [ -z "${*}" ]; then
+                        set -- ${SCRIPT_FLAGS}
+                    fi
+                fi
 
-while [ "${1}" != "" ]; do
-    case ${1} in
-    -pl | --pipeline)		shift
-                            PIPELINE_FILE=${1}
-                            ;;
-        -d | --data)   	    shift
-                            DATA_FILE=${1}
-                            ;;
-    * ) echo "illegal ARGUMENT ${1}"
-    esac
-    shift
-done
+                while [ "${1}" != "" ]; do
+                    case ${1} in
+                    -pl | --pipeline)		shift
+                                            PIPELINE_FILE=${1}
+                                            ;;
+                        -d | --data)   	    shift
+                                            DATA_FILE=${1}
+                                            ;;
+                    * ) echo "illegal ARGUMENT ${1}"
+                    esac
+                    shift
+                done
 
-echo "Loading singularity"
-module load tools/singularity/3.5
+                echo "Loading singularity"
+                module load tools/singularity/3.5
 
-# work in the nemo shared dir
-cd <NEMO_SHARED_DIR>
+                # work in the nemo shared dir
+                cd <NEMO_SHARED_DIR>
 
-# Note: make sure that the container is executeable
-singularity exec <SINGULARITY_CONTAINER> python -c \
-"import pickle; pl=dill.load(open('$PIPELINE_FILE', 'rb')); \
- data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
-'''
+                # Note: make sure that the container is executeable
+                singularity exec <SINGULARITY_CONTAINER> python -c "import dill; from <__main__> import *; pl=dill.load(open('$PIPELINE_FILE', 'rb')); data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
+                '''
 
     return script
 
@@ -236,10 +239,15 @@ def transfer_pickles_local_to_nemo(ssh_client, conf, file_dict):
         script_local_tmp_fl.stem + script_local_tmp_fl.suffix)
     # script_local_tmp_fl.chmod(0x777)
     open(script_local_tmp_fl, 'w').write(
-        get_eval_sh().replace('<SINGULARITY_CONTAINER>',
-                              conf['singularity_container'])
-        .replace('<NEMO_SHARED_DIR>',
-                 conf['nemo_shared_dir'])
+        inspect.cleandoc(
+            get_eval_sh()
+            .replace('<SINGULARITY_CONTAINER>',
+                     str(conf['singularity_container']))
+            .replace('<NEMO_SHARED_DIR>',
+                     str(conf['nemo_shared_dir']))
+            .replace('<__main__>',
+                     str(conf['__main__'].stem))
+        )
     )
 
     ftp_client.put(str(script_local_tmp_fl),
@@ -255,12 +263,7 @@ def transfer_pipeline_dependencies(pdata):
     NEMO_EVAL_LOGGER.info("Transfering necessary modules")
 
     conf = pdata.get_by_name('nemo_config').data
-
-    needed_modules = []
-    for pl in pdata.get_by_name('pipelines').data:
-        needed_modules += pipeline_dependencies(pl)
-
-    needed_modules_paths = list(set(needed_modules))      # only unique ones
+    needed_modules = [conf['__main__']] + conf['script_paths_to_copy']
 
     # use rsync as we want to glob for *.py
     cmd = (f'rsync -Pavz --exclude=".*" --include="*/" --include="*.py" '
@@ -268,7 +271,7 @@ def transfer_pipeline_dependencies(pdata):
            f' fr_md1104@login1.nemo.uni-freiburg.de:{conf["nemo_shared_dir"]}'
            )
 
-    for pth in needed_modules_paths:
+    for pth in needed_modules:
         os.system(cmd.replace('<src_dir>', str(pth)))
 
 
@@ -358,8 +361,9 @@ def start_job(ssh_client, conf, pl_file, data_file):
     script_flags = f'-pl {pl_file} -d {data_file}'
 
     stdin, stdout, stderr = ssh_client.exec_command(
-        f'msub -o {log_file} -e {log_file} -v SCRIPT_FLAGS="{script_flags}"'
-        f' -l nodes=1:ppn=1,pmem=1gb,walltime=08:00:00 {eval_script_path}'
+        f'msub -q express -o {log_file} -e {log_file} '
+        f'-v SCRIPT_FLAGS="{script_flags}" '
+        f'-l nodes=1:ppn=1,pmem=500mb,walltime=00:10:00 {eval_script_path}'
     )
 
     id_str = stdout.read().decode('ascii').replace('\n', '')
@@ -440,8 +444,17 @@ def test_print(pdata):
 
 
 def test_sleep(pdata):
-    time.sleep(30)
+    sleep(180)
     return pdata
+
+# TODO: Unfortunately, even dill is not capeable of getting the functions
+# with import right ---> here we fail at sleep
+# (or also with basic `import time` at time.sleep) as this is unknown in
+# the singularity container loading the pipeline via dill.load()
+#
+# Think about a proper way of sourcing....
+# Find a way of sourcing the file where the pls are defined --> e.g. copy
+# then source everything via: from main import *
 
 
 # ==============================================================================
@@ -459,6 +472,9 @@ eval_pl.add_step(('Start monitoring', start_monitoring, {}))
 eval_pl.add_step(('Stop mirroring', stop_mirror_log_files, {}))
 eval_pl.add_step(('Clean tmp files', clean_tmp_files, {}))
 
+stop_pl = xPipeline('cleanup_pl')
+stop_pl.add_step(('Stop mirroring', stop_mirror_log_files, {}))
+stop_pl.add_step(('Clean tmp files', clean_tmp_files, {}))
 
 if __name__ == '__main__':
 

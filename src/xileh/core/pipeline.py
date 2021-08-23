@@ -122,7 +122,7 @@ class xPipeline(object):
             pdata = foo(pdata, **kwargs)
 
             if self._log_eval:
-                self._logger.info(f"Finnished step {n_of_m}: {step[0]}")
+                self._logger.info(f"Finished step {n_of_m}: {step[0]}")
 
 
 if __name__ == "__main__":

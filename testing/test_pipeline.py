@@ -70,6 +70,6 @@ def test_logging(sample_pipeline, sample_data):
 
     lines = open(logfile, 'r').readlines()
     assert len(lines) == 5
-    assert "Finnished step 2/2: c22_2" in lines[-1]
+    assert "Finished step 2/2: c22_2" in lines[-1]
 
     os.remove(logfile)
