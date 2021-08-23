@@ -56,12 +56,12 @@ def test_simple_eval(sample_pipeline, sample_data):
                 if k.startswith('catch22__')]) == 23
 
 
-def test_logging(sample_pipeline, sample_data):
+def test_logging(sample_pipeline, sample_data, tmpdir):
     sample_pipeline.add_step(('c22_1', create_features, {'algo': 'c22'}))
     sample_pipeline.add_step(('c22_2', create_features, {'algo': 'c22'}))
 
     sample_pipeline._log_eval = True
-    logfile = f'/tmp/{sample_pipeline._name}.log'
+    logfile = tmpdir.join(f'{sample_pipeline._name}.log')
 
     sample_pipeline._logger = PlainLogger(logfile)
     sample_pipeline.eval(sample_data)
@@ -71,5 +71,3 @@ def test_logging(sample_pipeline, sample_data):
     lines = open(logfile, 'r').readlines()
     assert len(lines) == 5
     assert "Finished step 2/2: c22_2" in lines[-1]
-
-    os.remove(logfile)
