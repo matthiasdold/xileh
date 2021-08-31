@@ -8,6 +8,7 @@
 
 from methodtools import lru_cache
 
+import warnings
 import numpy as np
 
 
@@ -282,7 +283,7 @@ class xPData(object):
         ddata['header'] = self.header
         ddata['meta'] = self.meta
 
-        rdict = {self.name: ddata}
+        rdict = {self.name: ddata, 'type': 'xPData'}
         return rdict
 
 
@@ -312,6 +313,60 @@ class CheckedList(list):
                 f" with name '{elm.header['name']}', names need to be unique."
 
         super(CheckedList, self).append(elm)
+
+
+def from_dict(d):
+    """ Given a dictionary representation of an xPData object
+    reconstruct --> inverser of xPData._to_dict
+
+    NOTE: The dictionary and its values will be linked to the xPData container
+    by reference. Create a deep copy if necessary.
+
+    Parameters
+    ----------
+    d : dict
+        dictionary representation of a xPData object
+
+    Returns
+    -------
+    xpd : xPData
+        the pipeline data instance according to the data in d
+    """
+
+    assert d['type'] == 'xPData', "Dictionary needs to represent a xPData"\
+        " object which needs a type=='xPData' key:value pair"
+
+    names = [k for k in d.keys() if k != 'type']
+    assert len(names) == 1, "Unknown structure for casting dict to xPData"\
+        " - expected one key for the container name and one 'type' nothing more"
+
+    elms = d[names[0]]
+
+    # check consistency with header
+    if 'name' in elms['header'].keys():
+        if elms['header']['name'] != names[0]:
+            raise KeyError("Headers name argument not consistent with name"
+                           f"provided as a key for the full dict={elms}, "
+                           f" name={names[0]}")
+
+    else:
+        warnings.warn("Dictionary without 'name' under the 'header' values"
+                      " - creating on the fly")
+        elms['header']['name'] = names[0]
+
+    # check if we have nested container structure - elements of a list might
+    # be containers again. In theory, we could also have containers in dicts
+    # which again are in a list or a dict and so forth, but this would also
+    # not work for the recursive check of the get_by_name(), -> do not consider
+    if isinstance(elms['data'], list):
+        for i, elm in enumerate(elms['data']):
+            if (isinstance(elm, dict) and 'type' in elm.keys()
+                    and elm['type'] == 'xPData'):
+                elms['data'][i] = from_dict(elm)
+
+    return xPData(elms['data'],
+                  header=elms['header'],
+                  meta=elms['header'])
 
 
 if __name__ == "__main__":

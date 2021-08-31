@@ -9,6 +9,7 @@ import pytest
 import numpy as np
 from xileh.core.pipelinedata import xPData
 from xileh.core.pipelinedata import CheckedList
+from xileh.core.pipelinedata import from_dict
 
 
 @pytest.fixture
@@ -151,8 +152,10 @@ def test__to_dict(get_nested_test_data):
     dtd = td._to_dict()
 
     # we only have one outer container
-    assert len(list(dtd.keys())) == 1, "Dict of xPData should have 1 outer key"
+    assert len(list(dtd.keys())) == 2, "Dict of xPData should have 2 outer key"
     assert list(dtd.keys())[0] == td.name, "Name missmatch"
+    assert list(dtd.keys())[1] == 'type' and dtd['type'] == 'xPData', \
+        "Missing a type==xPData key:value pair"
 
     # lists conserved
     assert (len(dtd[td.name]['data']) == len(td.data)), "Data list missmatch"
@@ -160,3 +163,10 @@ def test__to_dict(get_nested_test_data):
     # deepest level children
     assert (list(dtd[td.name]['data'][0].values())[0]['data'][0]
             == td.get_by_name('1st_level_child').data[0]._to_dict())
+
+
+def test_from_dict(get_nested_test_data):
+    t = from_dict(get_nested_test_data._to_dict())
+
+    assert t.get_containers() == get_nested_test_data.get_containers(), \
+        "Inconsistent containers in from_dict(_to_dict()) cycle"
