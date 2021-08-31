@@ -12,9 +12,22 @@
 # -> run the pipeline.eval(pipeline_data) as a job in a singularity container
 # -> provide logging of the job and the pipelines
 # -> (potentially) also retrieve the data
+#
+# ---- Some notes: --------------------------------------------------------
+#
+# Doing the evaluation at nemo for pipelines and data pairs will create
+# two type of log files at the nemo_log_dir:
+#   - a log file <pipeline_name>.log => will track the pipeline logging
+#     via log_eval=True and is necessary for the monitoring, as this will
+#     include the information about which step is completed etc
+#     ==> hence it is required that the pipelines have unique names!
+#   - a log file pipeline_<pipeline_hash>_data_<data_hash>.log which
+#     includes all the STDOUT and STDERR produced by evaluating the pipeline
+#     e.g. a simply print("something") will write a line with "something"
+#     this is also used to check if an error in evaluting the data on the
+#     pipeline occured
 
 import os
-import copy
 import dill
 import paramiko
 import inspect
@@ -126,6 +139,8 @@ def validate_data(pdata,
     # pipelines are unique --> required for 1 to 1 logging
     pl_hashes = [(pl, pl.__hash__(), pl._name) for
                  pl in pdata.get_by_name(pl_container).data]
+    print(pl_hashes)
+
     non_uniques = [plh for plh in set(pl_hashes) if pl_hashes.count(plh) > 1]
     names = [plh[2] for plh in pl_hashes]
     non_unique_n = [n for n in set(names) if names.count(n) > 1]
@@ -395,6 +410,7 @@ def mirror_log_files(pdata):
         # touch files to make sure they are there if no print has happened yet
         # e.g because job is still in queue
         ssh_client.exec_command(f"touch {nemo_log_file}")
+        local_log_file.parent.mkdir(parents=True, exist_ok=True)
         local_log_file.touch()
 
         # Start mirroring processes
@@ -435,6 +451,27 @@ def start_monitoring(pdata):
 
 
 def clean_tmp_files(pdata):
+    conf = pdata.get_by_name('nemo_config').data
+    ssh_client = pdata.get_by_name('ssh_client').data
+
+    # local cleaning
+    local_tmp = conf['local_pickle_tmp']
+
+    if local_tmp.joinpath('nemo_eval').exists():
+        for f in local_tmp.joinpath('nemo_eval').glob('*'):
+            f.unlink()
+
+    local_tmp.joinpath('nemo_eval.log').unlink()
+    for f in (list(local_tmp.rglob('data*.pickle'))
+              + list(local_tmp.rglob('pipeline*.pickle'))):
+
+        f.unlink()
+
+    # remote cleaning
+    stdin, stdout, stderr = ssh_client.exec_command(
+        f'rm {conf["nemo_log_dir"]}/*.log'
+    )
+
     return pdata
 
 
@@ -444,7 +481,7 @@ def test_print(pdata):
 
 
 def test_sleep(pdata):
-    sleep(180)
+    sleep(30)
     return pdata
 
 # TODO: Unfortunately, even dill is not capeable of getting the functions
@@ -460,33 +497,41 @@ def test_sleep(pdata):
 # ==============================================================================
 # Pipeline
 # ==============================================================================
-eval_pl = xPipeline('eval_on_nemo_pl')
+eval_pl = xPipeline('eval_on_nemo_pl', log_eval=False)
 eval_pl.add_step(('Check the input', validate_data, {}))
 eval_pl.add_step(('Attach logs', attach_log_files, {}))
 eval_pl.add_step(('Initialize ssh connection',
                   initialize_ssh_connection_to_nemo, {}))
+# Not we clean up to remove residue from the temp dir which might be there
+# from a previous run. -> don't clean after, in case there might be something
+# which needs to be looked up
+eval_pl.add_step(('Clean tmp files', clean_tmp_files, {}))
 eval_pl.add_step(('Send data to nemo', send_data_to_nemo, {}))
 eval_pl.add_step(('Eval jobs on nemo', send_eval_jobs_to_nemo, {}))
 eval_pl.add_step(('Mirror log files', mirror_log_files, {}))
 eval_pl.add_step(('Start monitoring', start_monitoring, {}))
 eval_pl.add_step(('Stop mirroring', stop_mirror_log_files, {}))
-eval_pl.add_step(('Clean tmp files', clean_tmp_files, {}))
 
-stop_pl = xPipeline('cleanup_pl')
+stop_pl = xPipeline('cleanup_pl', log_eval=False)
 stop_pl.add_step(('Stop mirroring', stop_mirror_log_files, {}))
 stop_pl.add_step(('Clean tmp files', clean_tmp_files, {}))
 
 if __name__ == '__main__':
 
-    testpl = xPipeline('testpipeline')
+    testpl = xPipeline('testpipeline',)
     testpl.add_step(('testprint', test_print, {}))
-    testpl.add_step(('testsleet', test_sleep, {}))
+    testpl.add_step(('testsleep', test_sleep, {}))
     testpl.add_step(('testprint 2', test_print, {}))
 
-    testpl2 = copy.deepcopy(testpl)
-    testpl3 = copy.deepcopy(testpl)
-    testpl2._name = 'testpipeline2'
-    testpl3._name = 'testpipeline3'
+    testpl2 = xPipeline('testpipeline2',)
+    testpl2.add_step(('testprint', test_print, {}))
+    testpl2.add_step(('testsleep', test_sleep, {}))
+    testpl2.add_step(('testprint 2', test_print, {}))
+
+    testpl3 = xPipeline('testpipeline3',)
+    testpl3.add_step(('testprint', test_print, {}))
+    testpl3.add_step(('testsleep', test_sleep, {}))
+    testpl3.add_step(('testprint 2', test_print, {}))
 
     testdt = xPData([1, 2, 3], name='testdata')
     testdt2 = xPData([1, 2, 3, 4], name='testdata')
@@ -496,10 +541,19 @@ if __name__ == '__main__':
             xPData(get_default_config(), name='nemo_config'),
             # NOTE: Pipelines have to be unique (at least different names)
             # as this is required for monitoring the remote logging state
-            xPData([testpl, testpl2, testpl3], name='pipelines'),
-            xPData([testdt, testdt2, testdt], name='data'),
+            xPData([testpl,
+                    testpl2,
+                    # testpl3
+                    ],
+                   name='pipelines'),
+            xPData([testdt,
+                    testdt2,
+                    # testdt
+                    ],
+                   name='data'),
         ],
         name='eval_on_nemo_data'
     )
 
     eval_pl.eval(pdata)
+    # stop_pl.eval(pdata)           # if eval_pl fails to finish

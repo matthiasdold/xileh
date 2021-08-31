@@ -69,13 +69,13 @@ class PipelineMonitor(object):
 
     def check_logs(self):
         """ Read the logs and check the last finished step """
-        tqdm.write(
-            f"Checking logfiles - {self._logfiles} - time:"
-            f" {time.strftime('%Y%m%d_%H%M%S')}")
+        # tqdm.write(
+        #     f"Checking logfiles - {self._logfiles} - time:"
+        #     f" {time.strftime('%Y%m%d_%H%M%S')}")
         for i, lf in enumerate(self._logfiles):
             text = open(lf, 'r').read()
-            step_info = re.findall(r'Finnished step (\d*)/(\d*)', text)
-            tqdm.write(f"Step info is: {step_info}")
+            step_info = re.findall(r'Finished step (\d*)/(\d*)', text)
+            # tqdm.write(f"Step info is: {step_info}")
 
             # if at least one step finished, update the state
             if step_info != []:
@@ -134,6 +134,9 @@ if __name__ == '__main__':
 
     # wait for files to be written for the first time
     time.sleep(2)
+
+    logfs = [Path('/tmp/nemo_eval/testpipeline.log'),
+             Path('/tmp/nemo_eval/testpipeline2.log')]
 
     m = PipelineMonitor(logfiles=logfs)
     m.show()
