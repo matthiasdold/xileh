@@ -126,7 +126,7 @@ class xPData(object):
     def meta(self, mdict):
         # check if lengths are aligned if data of object with shape is passed
         for k, v in mdict.items():
-            if 'shape' in dir(v):
+            if 'shape' in dir(v) and 'shape' in dir(self._data):
                 if not any([v.shape[i] == self._data.shape[i]
                             for i in range(len(v.shape))]):
                     raise ValueError(
