@@ -84,10 +84,18 @@ def test_header(get_test_data):
         xPData(None, header={})
 
 
-def test_search_by_name(get_nested_test_data):
+def test_get_by_name(get_nested_test_data):
     td = get_nested_test_data
 
     assert td.get_by_name('search_target') == td.data[1]
+    assert isinstance(td.get_by_name('new', create_if_missing=True), xPData)
+    assert 'new' in td.get_container_names()
+
+    assert td.get_by_name('somename',
+                          find_parent=True).name == '1st_level_child'
+
+    td.delete_by_name('new')
+    assert 'new' not in td.get_containers()
 
 
 def test_checked_list():

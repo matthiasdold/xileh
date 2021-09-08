@@ -178,7 +178,8 @@ class xPData(object):
                                 dname='meta', missing=missing)
 
     @lru_cache(maxsize=16)
-    def get_by_name(self, name, create_if_missing=False):
+    def get_by_name(self, name, create_if_missing=False, find_parent=False,
+                    parent=None):
         """ Traverse the data container and look for a (sub) container
         with the given name and return it if found
 
@@ -189,6 +190,11 @@ class xPData(object):
         create_if_missing : bool
             if no container is found, create a new one with the given name
             and append to the self.data if it is a list, else raise Error
+        find_parent : bool
+            if true return the parent container instead
+        parent : xileh.xPData
+            a container to store the parent to be returned if find_parent is
+            true. Used for recursive call of the method.
 
         Returns
         -------
@@ -198,8 +204,10 @@ class xPData(object):
 
         """
         data = None
-        if 'name' in self.header.keys() and self.header['name'] == name:
+        if self.header['name'] == name:
             data = self
+            if find_parent:
+                data = parent
 
         # if we have nested data containers, search recursively and stop at first match         # noqa
         # Note: it is the coders responsibility to avoid conflicts with potentially             # noqa
@@ -207,7 +215,8 @@ class xPData(object):
         elif isinstance(self.data, list):
             for pd in [p for p in self.data if isinstance(p, xPData)]:
                 # create_if_missing only on outer most container
-                data = pd.get_by_name(name)
+                data = pd.get_by_name(name, find_parent=find_parent,
+                                      parent=self)
                 if data is not None:
                     break                                     # early stopping
             # full iteration nothing found and last check
@@ -260,6 +269,27 @@ class xPData(object):
                 names += pd.get_container_names()
 
         return names
+
+    def delete_by_name(self, name):
+        """Look for a subcontainer with the given name and drop it"""
+
+        # Sub containers will always be part of a list or the only .data element
+        # In both cases it is ok to return a list (potentially empty)
+
+        # make sure it is there
+        trg_c = self.get_by_name(name)
+        assert trg_c is not None, f"No container with {name=} to delete."
+
+        parent = self.get_by_name(name, find_parent=True)
+
+        if isinstance(parent.data, list):
+            parent.data = [c for c in parent.data if c != trg_c]
+        elif parent.data == trg_c:
+            parent.data = []
+        else:
+            raise ValueError(f"Parent of target with {name=} has an unknown"
+                             " data structure - should either include just"
+                             " the container or a list of containers")
 
     def _to_dict(self):
         """ Transform the container to a dictionary -> for later use of
