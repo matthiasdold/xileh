@@ -343,7 +343,7 @@ class CheckedList(list):
 
         """
         if isinstance(elm, xPData):
-            assert elm.header['name'] not in self.xpdata.get_container_names(), \           # noqa
+            assert elm.header['name'] not in self.xpdata.get_container_names(), \
                 f"Data container '{self.xpdata}' already containes a container"\
                 f" with name '{elm.header['name']}', names need to be unique."
 
@@ -401,7 +401,7 @@ def from_dict(d):
 
     return xPData(elms['data'],
                   header=elms['header'],
-                  meta=elms['header'])
+                  meta=elms['meta'])
 
 
 if __name__ == "__main__":

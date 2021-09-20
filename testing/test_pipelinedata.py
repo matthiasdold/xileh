@@ -33,7 +33,7 @@ def get_nested_test_data():
                     xPData(data=[1, 23, 4],
                            header={'name': 'somename'})
                 ],
-                header={'name': '1st_level_child'}
+                header={'name': '1st_level_child'},
             ),
             xPData(
                 data=np.ones(3),
@@ -44,6 +44,7 @@ def get_nested_test_data():
         ],
         header={'name': 'outer_container',
                 'description': 'A parent container without name'},
+        meta={'some_meta': [1, 2, 3]}
     )
     return tdata
 
@@ -182,3 +183,6 @@ def test_from_dict(get_nested_test_data):
 
     assert t.get_containers() == get_nested_test_data.get_containers(), \
         "Inconsistent containers in from_dict(_to_dict()) cycle"
+
+    assert t.get_by_name('outer_container').meta['some_meta'] == [1, 2, 3], \
+        "Meta information got lost during read _from_dict"
