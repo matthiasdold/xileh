@@ -203,6 +203,7 @@ class xPData(object):
                 with the given name can be found
 
         """
+
         data = None
         if self.header['name'] == name:
             data = self
@@ -219,6 +220,7 @@ class xPData(object):
                                       parent=self)
                 if data is not None:
                     break                                     # early stopping
+
             # full iteration nothing found and last check
             if data is None and create_if_missing:
                 data = xPData(None, name=name)
@@ -291,6 +293,9 @@ class xPData(object):
                              " data structure - should either include just"
                              " the container or a list of containers")
 
+        # clear cache to avoid retrieving old data from cache
+        self.get_by_name.cache_clear()
+
     def _to_dict(self):
         """ Transform the container to a dictionary -> for later use of
         storing / serializing the data
@@ -338,7 +343,7 @@ class CheckedList(list):
 
         """
         if isinstance(elm, xPData):
-            assert elm.header['name'] not in self.xpdata.get_container_names(), \
+            assert elm.header['name'] not in self.xpdata.get_container_names(), \           # noqa
                 f"Data container '{self.xpdata}' already containes a container"\
                 f" with name '{elm.header['name']}', names need to be unique."
 

@@ -94,8 +94,12 @@ def test_get_by_name(get_nested_test_data):
     assert td.get_by_name('somename',
                           find_parent=True).name == '1st_level_child'
 
+    td.get_by_name('new')   # -> will cache the result
     td.delete_by_name('new')
     assert 'new' not in td.get_containers()
+
+    # test data also the cache is cleared
+    assert td.get_by_name('new') is None, "Deletion of did not clear cache"
 
 
 def test_checked_list():
