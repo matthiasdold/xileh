@@ -59,13 +59,19 @@ def get_default_config():
         # for data transfer
         'nemo_shared_dir': Path('/home/fr/fr_fr/fr_md1104/tmp'),
         'local_pickle_tmp': Path('/tmp'),
-        'singularity_container': Path('/work/ws/nemo/fr_md1104-singularity_container-0/workingvenv39.sif'),      # noqa
+        'workspace_dir': Path('/work/ws/nemo/'),
+        'singularity_container_dir': Path('/work/ws/nemo/fr_md1104-singularity_container-0/'),      # noqa
+        'singularity_container_name': 'xileh_pd_interactive.sif',      # noqa
         # For unpickling to be possible, we need the scripts, including __main__
         # Everything from the parent directory of __main__ downwards will be
         # copied to local_log_dir on the remote host
+        # TODO: Consider how this could be derived dynamically
         '__main__': Path('/home/doda/workspace/python/xileh/src/xileh/utils/nemo_eval.py'),                      # noqa
         # Take all the script roots from this list and copy all *.py
-        'script_paths_to_copy': []
+        'script_paths_to_copy': [],
+        'ram_to_use': '1500mb',
+        'time_to_allocate': '00:10:00',
+        'queue_to_use': '',
     }
     return conf
 
@@ -103,9 +109,10 @@ def get_eval_sh():
 
                 # work in the nemo shared dir
                 cd <NEMO_SHARED_DIR>
+                # cd <SINGULARITY_CONTAINER_DIR>              # work somewhere outside home, else singularity will not be able to access paths outside from home
 
                 # Note: make sure that the container is executeable
-                singularity exec <SINGULARITY_CONTAINER> python -c "import dill; from <__main__> import *; pl=dill.load(open('$PIPELINE_FILE', 'rb')); data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
+                singularity exec --bind <WS_DIR>:<WS_DIR> <SINGULARITY_CONTAINER> python -c "import dill; from <__main__> import *; pl=dill.load(open('$PIPELINE_FILE', 'rb')); data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
                 '''
 
     return script
@@ -257,11 +264,16 @@ def transfer_pickles_local_to_nemo(ssh_client, conf, file_dict):
         inspect.cleandoc(
             get_eval_sh()
             .replace('<SINGULARITY_CONTAINER>',
-                     str(conf['singularity_container']))
+                     str(conf['singularity_container_dir'].joinpath(
+                         conf['singularity_container_name'])
+                         ))
             .replace('<NEMO_SHARED_DIR>',
                      str(conf['nemo_shared_dir']))
+            .replace('<SINGULARITY_CONTAINER_DIR>',
+                     str(conf['singularity_container_dir']))
             .replace('<__main__>',
                      str(conf['__main__'].stem))
+            .replace('<WS_DIR>', str(conf['workspace_dir']))
         )
     )
 
@@ -343,7 +355,7 @@ def send_eval_jobs_to_nemo(pdata, jobs_container='jobs'):
                  ]
 
     data_files = [(conf['nemo_shared_dir']
-                  .joinpath(f'data_{d.__hash__()}.pickle'))
+                   .joinpath(f'data_{d.__hash__()}.pickle'))
                   for d in data
                   ]
 
@@ -375,10 +387,15 @@ def start_job(ssh_client, conf, pl_file, data_file):
     # define the parameters to be passed to the script
     script_flags = f'-pl {pl_file} -d {data_file}'
 
+    q2use = '' if conf['queue_to_use'] == '' else '-q ' + conf['queue_to_use']
+
     stdin, stdout, stderr = ssh_client.exec_command(
-        f'msub -q express -o {log_file} -e {log_file} '
+        'msub '  # '-q express'
+        f'{q2use} '
+        f'-o {log_file} -e {log_file} '
         f'-v SCRIPT_FLAGS="{script_flags}" '
-        f'-l nodes=1:ppn=1,pmem=500mb,walltime=00:10:00 {eval_script_path}'
+        f'-l nodes=1:ppn=1,pmem={conf["ram_to_use"]},'
+        f'walltime={conf["time_to_allocate"]} {eval_script_path}'
     )
 
     id_str = stdout.read().decode('ascii').replace('\n', '')
@@ -432,6 +449,8 @@ def stop_mirror_log_files(pdata):
     for p in pdata.get_by_name('tail_procs').data:
         p.terminate()
 
+    return pdata
+
 
 def start_monitoring(pdata):
     """ Check the log files for the jobs by continously monitoring them
@@ -461,7 +480,8 @@ def clean_tmp_files(pdata):
         for f in local_tmp.joinpath('nemo_eval').glob('*'):
             f.unlink()
 
-    local_tmp.joinpath('nemo_eval.log').unlink()
+    local_tmp.joinpath('nemo_eval.log').unlink(missing_ok=True)
+
     for f in (list(local_tmp.rglob('data*.pickle'))
               + list(local_tmp.rglob('pipeline*.pickle'))):
 

@@ -6,7 +6,7 @@
 # that is passed between processing steps and can be used
 # for DQ checks
 
-from methodtools import lru_cache
+# from methodtools import lru_cache
 
 import warnings
 import numpy as np
@@ -125,6 +125,8 @@ class xPData(object):
     @meta.setter
     def meta(self, mdict):
         # check if lengths are aligned if data of object with shape is passed
+
+        # TODO: Reconsider this restriction / saveguard... unnecessary?
         for k, v in mdict.items():
             if 'shape' in dir(v) and 'shape' in dir(self._data):
                 if not any([v.shape[i] == self._data.shape[i]
@@ -177,7 +179,8 @@ class xPData(object):
         return self._check_dict(self.meta, key,
                                 dname='meta', missing=missing)
 
-    @lru_cache(maxsize=16)
+    # @lru_cache(maxsize=16) --> disable as nemo_eval would not work like this. => problem is transport of data as pickle           # noqa
+    # TODO: Fix transport not as pickle but as folder generated via datahandler.saver.save()                                        # noqa
     def get_by_name(self, name, create_if_missing=False, find_parent=False,
                     parent=None):
         """ Traverse the data container and look for a (sub) container
@@ -294,7 +297,8 @@ class xPData(object):
                              " the container or a list of containers")
 
         # clear cache to avoid retrieving old data from cache
-        self.get_by_name.cache_clear()
+        # Removed caching on get_by_name -> see above
+        # self.get_by_name.cache_clear()
 
     def _to_dict(self):
         """ Transform the container to a dictionary -> for later use of
