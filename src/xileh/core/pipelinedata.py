@@ -8,6 +8,7 @@
 
 # from methodtools import lru_cache
 
+import uuid
 import warnings
 import numpy as np
 
@@ -76,13 +77,20 @@ class xPData(object):
         self.name = ''          # will be updated by the header setter
 
         # have the setters called on init
+        self.header = nheader           # have header before data to ensure name is set already         # noqa
         self.data = data
-        self.header = nheader
         self.meta = meta
+
+    def __getitem__(self, name):
+        return self.get_by_name(name)
 
     def __repr__(self):
         """ Print more information about the container on repl call """
-        return super().__repr__() + f"\nContainer name: {self.header['name']}"
+        # return super().__repr__() + f"\nContainer name: {self.header['name']}"
+        s = f'xPData object at {hex(id(self))} '\
+            f'- with size {self.__sizeof__()}\n'
+        s += pretty_print_get_containers(self.get_containers())
+        return s
 
     def _validate_input(self, data, header, meta, name):
         """ Some DQ checks"""
@@ -104,6 +112,7 @@ class xPData(object):
     @data.setter
     def data(self, val):
         # Use a list checking on names if more containers will be appended
+
         if isinstance(val, list):
             val = CheckedList(val, self)
         self._data = val
@@ -331,10 +340,13 @@ class CheckedList(list):
     """ A helper list class for which the append method will be linked
         To an xPData container for checking uniqueness if an xPData
         element is appended
+
+        Also registers the name in the parents keys for ['<name>'] access
     """
 
     def __init__(self, vals, xpdata):
         list.__init__(self, vals)
+
         self.xpdata = xpdata
 
     def append(self, elm):
@@ -344,6 +356,7 @@ class CheckedList(list):
         Parameters
         ----------
         elm : object
+            the object to append
 
         """
         if isinstance(elm, xPData):
@@ -408,6 +421,25 @@ def from_dict(d):
                   meta=elms['meta'])
 
 
+def pretty_print_get_containers(d, depth=0):
+    """ Nicer string representation for return for .get_containers"""
+    if isinstance(d, dict):
+        s = ''.join([('|   ' * depth + k + ':\t'
+                      + pretty_print_get_containers(v, depth=depth + 1))
+                     for k, v in d.items()])
+    elif isinstance(d, list) and d != []:
+        s = '\n' + ''.join([pretty_print_get_containers(e, depth=depth)
+                            if isinstance(e, dict) else e
+                            for e in d])
+        s += '|   ' * (depth - 1) + "'" + '-' * 20 + '\n'
+    elif d == []:
+        s = 'list' + '\n'
+    else:
+        s = str(d) + '\n'
+
+    return s
+
+
 if __name__ == "__main__":
 
     tdata = xPData(
@@ -418,8 +450,19 @@ if __name__ == "__main__":
 
     tdata.data.append(
         xPData(
-            [xPData('a', header={'name': 'deepest'})],
+            [xPData('a', header={'name': 'deepest'}),
+             xPData(1241, header={'name': 'deepest2'}),
+             xPData({'a': 'b'}, header={'name': 'deepest'}),
+             ],
             header={'name': 'nesting'})
+    )
+
+    tdata.data.append(
+        xPData('124', name='notsodeep'),
+    )
+
+    tdata.data.append(
+        xPData([1, 2], name='notsodeep2'),
     )
 
     tdata_long_list = xPData(

@@ -186,3 +186,26 @@ def test_from_dict(get_nested_test_data):
 
     assert t.get_by_name('outer_container').meta['some_meta'] == [1, 2, 3], \
         "Meta information got lost during read _from_dict"
+
+
+def test_accessor(get_nested_test_data):
+    t = get_nested_test_data
+
+    assert t.get_by_name('somename') == t['somename'], "Dict accessor failed"
+
+    new = t.get_by_name('somenewlongname', create_if_missing=True)
+    new.data = 1241254
+    assert t.get_by_name('somenewlongname') == t['somenewlongname'],\
+        "Dict accessor failed after new container insertion"
+
+    t['somename'].data = 'newvalue'
+    assert t.get_by_name('somename').data == t['somename'].data,\
+        "Dict accessor failed after modifying via dict key"
+
+    nv = t.get_by_name('somename')
+    nv.data = 'anothernewvalue'
+    assert t.get_by_name('somename').data == t['somename'].data,\
+        "Dict accessor failed after modifying via get_by_name"
+
+    t.delete_by_name('somename')
+    assert t['somename'] is None, "Deletion failed with dict accessor"
