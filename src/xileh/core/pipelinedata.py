@@ -273,6 +273,10 @@ class xPData(object):
 
         return d
 
+    def gc(self):
+        """ Convenience alias for get_containers """
+        return self.get_containers()
+
     def get_container_names(self):
         """ Get all container names """
         names = [self.header['name']]
