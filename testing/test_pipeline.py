@@ -32,7 +32,14 @@ def test_add_step(sample_pipeline):
 
 def test_get_step(sample_pipeline):
     sample_pipeline.add_step(('c22 extract', create_features, {'algo': 'c22'}))
-    assert sample_pipeline.get_step('c22 extract') == sample_pipeline._steps[0]
+    assert (sample_pipeline.get_step('c22 extract')[0]
+            == sample_pipeline._steps[0])
+
+    # add some more and check the index
+    sample_pipeline.add_step(
+        ('c22 extract2', create_features, {'algo': 'c22'}))
+    assert (sample_pipeline.get_step('c22 extract2')[1]
+            == 1)
 
 
 def test_remove_step(sample_pipeline):

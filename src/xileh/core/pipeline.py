@@ -43,7 +43,12 @@ class xPipeline(object):
 
     def __repr__(self):
         """ Show name of repl call """
-        return super().__repr__() + f"\nPipeline name: {self._name}"
+        return (super().__repr__() + f"\nPipeline name: {self._name}"
+                + "\nSteps: " + self.pretty_print_get_steps())
+
+    def pretty_print_get_steps(self):
+        step_names = [f"'{s[0]}'" for s in self._steps]
+        return ' -> '.join(step_names)
 
     def add_step(self, step_foo):
         """ Add a processing step
@@ -85,8 +90,14 @@ class xPipeline(object):
         -------
         step : tuple (name, function, kwargs)
             the selected processing step
+        idx : int
+            index of step within self._steps
         """
-        return [t for t in self._steps if t[0] == name][0]
+
+        idx, step = [(i, t) for i, t in enumerate(self._steps)
+                     if t[0] == name][0]
+
+        return step, idx
 
     def eval(self, pdata):
         """ Run all steps in self._steps
