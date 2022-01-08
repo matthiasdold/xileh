@@ -13,7 +13,6 @@ import numpy as np
 # from progress.bar import IncrementalBar
 from scipy.io import savemat
 from pathlib import Path
-from tsfresh import extract_features
 
 from xileh.core.pipelinedata import xPData as PData
 
@@ -31,7 +30,7 @@ def create_features(pdata, algo='c22', src_container=None, logger=None,
         Algorithm to be used for the feature extraction, viable options are
             c22 => catch22
             hctsa => hctsa using the matlab implementation
-            tsfresh => tsfresh features
+            tsfresh => tsfresh features (will not longer be implemented)
     src_container : str
         Container name to work on, if None use the outer most
     """
@@ -39,7 +38,6 @@ def create_features(pdata, algo='c22', src_container=None, logger=None,
     extr_map = {
         'c22': catch22_extraction,
         'hctsa': hctsa_extraction,
-        'tsfresh': tsfresh_extraction
     }
 
     if src_container is None:
@@ -186,87 +184,6 @@ def catch22_extraction(ts, **kwargs):
     return dict(zip(n22, dstore))
 
 
-def tsfresh_extraction(ts, id_col_grps={}, **kwargs):
-    """ Use the tsfresh algorithm to extract features
-
-    Parameters
-    ----------
-    ts : numpy array
-        array of time series (n_variables x n_times)
-    id_col_grps : dict
-        dict of groups labels and variable names
-        for the variables to consider different entities,
-        e.g. epochs in a EEG experiment, or different sensors
-
-        e.g. if position (s) and speed (v) in two coordinates (x, y)
-        for 2 robots (r1, r2), ts should be sorted in the first dim as
-        r1_s_x, r1_s_y, r1_v_x, r1_v_y, r2_s_x, ...
-
-        the id_col_grps would the encode the robots and look like
-        {'grps': [1, 1, 1, 1, 2, 2, 2, 2], 'vars': ['s_x, s_y, v_x, v_y']}
-
-        Note that we would require the variables within each group
-        to be aligned, e.f. s_x, s_y, v_x, v_y in exactly this order
-
-        If id_col_grps is left empty, assume each col is a separate
-        entity
-
-
-    Returns
-    -------
-        ften : numpy array
-            feature tensor (n_variables x features)
-    """
-
-    # tsfresh works on pandas with time and as row index
-    df = pd.DataFrame(
-        ts.T,
-        columns=[f"var_{i}" for i in range(ts.shape[0])]
-    )
-
-    drop_prefix = False
-    if id_col_grps == {}:
-        dfu = (df.unstack().reset_index()
-               .rename(columns={'level_0': 'id', 'level_1': 'time'}))
-
-        # if we do not provide grps, i.e. each row of ts corresponds
-        # to an independent variable (e.g. channel), dfu would be a
-        # series with one column named '0' in this case drop the pref
-        # in the generated feature names
-        drop_prefix = True
-
-    else:
-
-        # validate that multiplicity for each of the groups is the same
-        grp_c = np.unique(id_col_grps['grps'], return_counts=True)
-        assert all(grp_c[1] == len(id_col_grps['vars']))
-
-        cidx = pd.MultiIndex.from_tuples(
-            zip(id_col_grps['grps'], id_col_grps['vars'] * len(grp_c[0])),
-            names=['grps', 'vars'])
-
-        df.columns = cidx
-        dfu = (df.T.unstack('grps').T
-               .reset_index(level=1)
-               .reset_index()
-               .rename(columns={'index': 'time', 'grps': 'id'})
-               )
-
-        dfu.columns.name = ''
-
-    dff = extract_features(dfu, column_id='id', column_sort='time')
-
-    if drop_prefix:
-        dff = dff.rename(columns=dict(zip(dff.columns,
-                                          [c[3:] for c in dff.columns])))
-
-    n = ['tsfresh__' + s for s in dff.columns.to_list()]
-    d = dff.to_numpy().T
-    d = d.reshape(d.shape + (1,))
-
-    return dict(zip(n, d))
-
-
 def connect_matlab():
     """ connect to matlab engine
 
@@ -287,4 +204,3 @@ if __name__ == "__main__":
     x = np.random.randn(3, 50)
     pda = PData(data=x, header={'desc': 'some test data'}, meta={})
     create_features(pda, algo='c22')
-    create_features(pda, algo='tsfresh')
