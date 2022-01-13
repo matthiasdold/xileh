@@ -18,3 +18,8 @@ The `xileh.core.pipelinedata.xPData` implements the pipelinedata container, whic
 3.  Meta information as a dictionary containing meta data about 1., such as configuration info for the processing, aggregated measure, or per record meta data. Note that if a dictionary value has a shape property, it is assumed that it should contain a per record (i.e. element of 1. / .shape[0] of 1.) info and is thus checked for its length upon initialization. So to provide an array  which does not match the length of 1. you have to pack it into an object without shape property first.
 
 All 1.-3. are potentially extended by processing steps within the pipeline. However, processing should in general not change any entities provided during initialization,but create new copies. There might be reasons however, where a change is required (e.g. memory constraint). Overwriting is thus not restricted.
+
+# TODOs
+* Write a proper readme here
+* implement an `add_steps` for the pipeline
+* implement addings pipeline steps with just a function and optionally looking for name and/or kwargs

@@ -50,20 +50,54 @@ class xPipeline(object):
         step_names = [f"'{s[0]}'" for s in self._steps]
         return ' -> '.join(step_names)
 
+    def check_step_foo(self, step_foo):
+        """ Check the tuple formulating a step function
+
+        Parameters
+        ----------
+        step_foo : tuple (name, function, kwargs)
+            name of the step, function which needs to be able to process
+            a PData object and (optional) kwargs for this function
+
+        Returns
+        -------
+        step_foo : tuple (name, function, kwargs)
+            tuple as input but with kwargs={} extended in case step_foo only
+            contains (name, function)
+        """
+
+        if len(step_foo) < 3 and not isinstance(step_foo[-1], dict):
+            step_foo = tuple(list(step_foo) + [{}])
+
+        return step_foo
+
     def add_step(self, step_foo):
         """ Add a processing step
 
         Parameters
         ----------
         step_foo : tuple (name, function, kwargs)
-            function which needs to be able to process
-            a PData object and name of the step
+            name of the step, function which needs to be able to process
+            a PData object and (optional) kwargs for this function
         """
 
         # check that name is not yet used
         assert all([step_foo[0] != t[0] for t in self._steps])
+        step_foo = self.check_step_foo(step_foo)
 
         self._steps.append(step_foo)
+
+    def add_steps(self, *steps):
+        """ Add a processing steps
+
+        Parameters
+        ----------
+        steps : tuples (name, function, kwargs)
+            name of the step, function which needs to be able to process
+            a PData object and (optional) kwargs for this function
+        """
+        for step in steps:
+            self.add_step(step)
 
     def remove_step(self, name):
         """Remove a step identified by the name
@@ -94,10 +128,28 @@ class xPipeline(object):
             index of step within self._steps
         """
 
-        idx, step = [(i, t) for i, t in enumerate(self._steps)
+        step, idx = [(t, i) for i, t in enumerate(self._steps)
                      if t[0] == name][0]
 
         return step, idx
+
+    def replace_step(self, name, step_foo):
+        """ Replace a function given its name
+
+        Parameters
+        ----------
+        name : str
+            step name i.e first value of the step tuple
+        step_foo : tuple (name, function, kwargs)
+            name of the step, function which needs to be able to process
+            a PData object and (optional) kwargs for this function
+
+        """
+
+        step, idx = self.get_step(name)
+        step_foo = self.check_step_foo(step_foo)
+
+        self._steps[idx] = step_foo
 
     def eval(self, pdata):
         """ Run all steps in self._steps
@@ -147,6 +199,12 @@ if __name__ == "__main__":
 
     xpl = xPipeline('testp', verbose=True)
     xpl.add_step(('c22 extract', create_features, {'algo': 'c22'}))
-    xpl.add_step(('c22 extract2', create_features, {'algo': 'c22'}))
+    xpl.add_step(('c22 extract2', create_features))
     xpl.add_step(('c22 extract3', create_features, {'algo': 'c22'}))
+
+    xpl.add_steps(
+        ('test1', create_features, {}),
+        ('test2', create_features),
+    )
+
     xpl.eval(tdata)

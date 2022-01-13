@@ -30,6 +30,28 @@ def test_add_step(sample_pipeline):
     assert len(sample_pipeline._steps) == 1
 
 
+def test_add_steps(sample_pipeline):
+    sample_pipeline.add_steps(
+        ('c22 extract', create_features, {'algo': 'c22'}),
+        ('c22 extract 2', create_features),
+        ('c22 extract 3', create_features, {})
+    )
+    assert len(sample_pipeline._steps) == 3
+
+
+def test_replace_step(sample_pipeline):
+    sample_pipeline.add_steps(
+        ('c22 extract', create_features, {'algo': 'c22'}),
+        ('c22 extract 2', create_features),
+        ('c22 extract 3', create_features, {})
+    )
+
+    sample_pipeline.replace_step('c22 extract 2',
+                                 ('new_step', create_features))
+
+    assert sample_pipeline._steps[1][0] == 'new_step'
+
+
 def test_get_step(sample_pipeline):
     sample_pipeline.add_step(('c22 extract', create_features, {'algo': 'c22'}))
     assert (sample_pipeline.get_step('c22 extract')[0]
