@@ -209,3 +209,17 @@ def test_accessor(get_nested_test_data):
 
     t.delete_by_name('somename')
     assert t['somename'] is None, "Deletion failed with dict accessor"
+
+
+def test_assignment(get_nested_test_data):
+    pdata = get_nested_test_data
+
+    new_pdata = xPData([1, 2, 3, 'test'], name="newname",
+                       meta={'some_meta': [1, 1, 1, 1]})
+
+    pdata['test'] = new_pdata
+
+    assert pdata['test'].data == new_pdata.data, "Assignment failed"
+    assert pdata['test'].meta == new_pdata.meta, "Assignment failed"
+
+

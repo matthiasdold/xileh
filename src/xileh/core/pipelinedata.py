@@ -8,7 +8,6 @@
 
 # from methodtools import lru_cache
 
-import uuid
 import warnings
 import numpy as np
 
@@ -84,9 +83,22 @@ class xPData(object):
     def __getitem__(self, name):
         return self.get_by_name(name)
 
+    def __setitem__(self, name, value):
+        assert isinstance(value, xPData), "You can only assign xPData"\
+            " containers to a xPData container"
+
+        trg = self.get_by_name(name)
+
+        trg.data = value.data
+
+        trg.header = value.header
+        trg.header['name'] = name
+
+        trg.meta = value.meta
+
     def __repr__(self):
         """ Print more information about the container on repl call """
-        # return super().__repr__() + f"\nContainer name: {self.header['name']}"
+        # return super().__repr__() + f"\nContainer: {self.header['name']}"
         s = f'xPData object at {hex(id(self))} '\
             f'- with size {self.__sizeof__()}\n'
         s += pretty_print_get_containers(self.get_containers())
