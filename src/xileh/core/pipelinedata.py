@@ -289,6 +289,13 @@ class xPData(object):
         """ Convenience alias for get_containers """
         return self.get_containers()
 
+    def add(self, value, name='', header={}, meta={}):
+        """ Convenience alias creating a new container """
+        trg = self.get_by_name(name, create_if_missing=True)
+        trg.data = value
+        trg.header.update(header)
+        trg.meta = meta
+
     def get_container_names(self):
         """ Get all container names """
         names = [self.header['name']]
