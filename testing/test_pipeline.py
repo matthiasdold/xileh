@@ -21,14 +21,14 @@ def sample_data():
 
 @pytest.fixture
 def sample_pipeline():
-    sample_pipeline = xPipeline('testp')
+    sample_pipeline = xPipeline('testp', log_eval=False)
     return sample_pipeline
 
 
 @pytest.fixture
 def sample_pipeline_filled():
 
-    sample_pipeline = xPipeline('testp')
+    sample_pipeline = xPipeline('testp', log_eval=False)
     sample_pipeline.add_steps(
         ('c22 extract', create_features, {'algo': 'c22'}),
         ('c22 extract 2', create_features),

@@ -32,8 +32,6 @@ All 1.-3. are potentially extended by processing steps within the pipeline. Howe
 #### Add 
 #### Delete 
 
-
-
 ## Pipelines
 ### Initialization
 ### Reuse in other modules
@@ -42,5 +40,9 @@ All 1.-3. are potentially extended by processing steps within the pipeline. Howe
 
 ## Working with xileh
 A general example of how a script could be structured
+
+
+## Data handler
+All kudos for the datahandler goes to @dcwil
 
 
