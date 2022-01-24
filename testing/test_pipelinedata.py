@@ -103,6 +103,21 @@ def test_get_by_name(get_nested_test_data):
     assert td.get_by_name('new') is None, "Deletion of did not clear cache"
 
 
+def test_creation_via_new(get_nested_test_data):
+    get_nested_test_data.add(np.zeros(10),
+                             name="my_new_test",
+                             header={'description': 'some_description'},
+                             meta={'plus_one': np.ones(10)}
+                             )
+
+    assert 'my_new_test' in get_nested_test_data.get_container_names()
+
+    trg = get_nested_test_data['my_new_test']
+    assert all(trg.data == np.zeros(10))
+    assert trg.header['description'] == 'some_description'
+    assert all(trg.meta['plus_one'] == np.ones(10))
+
+
 def test_checked_list():
     tdata = xPData(None, header={'name': 'test'})
 

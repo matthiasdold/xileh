@@ -151,6 +151,14 @@ class xPipeline(object):
 
         self._steps[idx] = step_foo
 
+    def set_step_kwargs(self, name, **kwargs):
+        """ Update the kwargs set for a particular step """
+
+        step, idx = self.get_step(name)
+
+        # tuple is unmuteable, but the dictionary at step[2] is muteable
+        step[2].update(kwargs)
+
     def eval(self, pdata):
         """ Run all steps in self._steps
         Parameters

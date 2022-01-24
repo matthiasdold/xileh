@@ -25,6 +25,18 @@ def sample_pipeline():
     return sample_pipeline
 
 
+@pytest.fixture
+def sample_pipeline_filled():
+
+    sample_pipeline = xPipeline('testp')
+    sample_pipeline.add_steps(
+        ('c22 extract', create_features, {'algo': 'c22'}),
+        ('c22 extract 2', create_features),
+        ('c22 extract 3', create_features, {})
+    )
+    return sample_pipeline
+
+
 def test_add_step(sample_pipeline):
     sample_pipeline.add_step(('c22 extract', create_features, {'algo': 'c22'}))
     assert len(sample_pipeline._steps) == 1
@@ -100,3 +112,18 @@ def test_logging(sample_pipeline, sample_data, tmpdir):
     lines = open(logfile, 'r').readlines()
     assert len(lines) == 5
     assert "Finished step 2/2: c22_2" in lines[-1]
+
+
+def test_set_step_kwargs(sample_pipeline_filled):
+    # test overwriting existing and adding new ones
+    kwargs = dict(algo='c42', more_kwargs_1=1, more_kwargs_2='a')
+
+    sample_pipeline_filled.set_step_kwargs('c22 extract', **kwargs)
+
+    # Note: Currently there is no check for whether a kwarg is valid for a func
+    # consider added this
+
+    step, idx = sample_pipeline_filled.get_step('c22 extract')
+
+    for k, v in kwargs.items():
+        assert step[2][k] == v
