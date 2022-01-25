@@ -11,6 +11,8 @@
 import warnings
 import numpy as np
 
+from xileh.utils.datahandler import saver
+
 
 class xPData(object):
 
@@ -202,6 +204,7 @@ class xPData(object):
 
     # @lru_cache(maxsize=16) --> disable as nemo_eval would not work like this. => problem is transport of data as pickle           # noqa
     # TODO: Fix transport not as pickle but as folder generated via datahandler.saver.save()                                        # noqa
+    # Not a critical performance overhead as of yet anyways
     def get_by_name(self, name, create_if_missing=False, find_parent=False,
                     parent=None):
         """ Traverse the data container and look for a (sub) container
@@ -357,6 +360,17 @@ class xPData(object):
         rdict = {self.name: ddata, 'type': 'xPData'}
         return rdict
 
+    def save(self, fname):
+        """ Store the container to a given folder name
+
+        Parameters
+        ----------
+        fname : str or pathlib.Path
+            folder path and name to store the data to
+        """
+
+        saver.save(self._to_dict(), fname=fname)
+
 
 class CheckedList(list):
 
@@ -442,6 +456,24 @@ def from_dict(d):
     return xPData(elms['data'],
                   header=elms['header'],
                   meta=elms['meta'])
+
+
+def from_container(cpath):
+    """ Load a container located at cpath
+
+    Parameters
+    ----------
+    cpath : str or pathlib.Path
+        path to the container
+
+    Returns
+    -------
+    pdata : xPData
+        a pipelinedata container loaded from cpath
+    """
+    pdata = from_dict(saver.load(cpath, unprepare_output=True))
+
+    return pdata
 
 
 def pretty_print_get_containers(d, depth=0):

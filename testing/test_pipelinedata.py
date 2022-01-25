@@ -5,11 +5,15 @@
 # date: 2021-03-26
 
 import pytest
-
+import tempfile
 import numpy as np
-from xileh.core.pipelinedata import xPData
+
+from pathlib import Path
+
+from xileh.core.pipelinedata import xPData, from_container
 from xileh.core.pipelinedata import CheckedList
 from xileh.core.pipelinedata import from_dict
+
 
 
 @pytest.fixture
@@ -238,3 +242,15 @@ def test_assignment(get_nested_test_data):
     assert pdata['test'].meta == new_pdata.meta, "Assignment failed"
 
 
+def test_save_and_load(get_nested_test_data):
+    with tempfile.TemporaryDirectory() as tmp:
+        fname = Path(tmp, 'fname')
+        get_nested_test_data.save(fname)
+
+        assert fname.exists(), "Folder was not created"
+
+        loaded = from_container(fname)
+
+        for cn in loaded.get_container_names():
+            assert loaded[cn].data == get_nested_test_data[cn].data, \
+                f"Missmatch for {cn}"

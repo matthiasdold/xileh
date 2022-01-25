@@ -46,3 +46,5 @@ A general example of how a script could be structured
 All kudos for the datahandler goes to @dcwil
 
 
+# TODOS
+[ ] Pandas data frame load cycle -> currently loosing column info!
