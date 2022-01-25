@@ -3,7 +3,7 @@ from xileh.utils.datahandler.type_utils.constructors import TYPE_CONSTRUCTORS
 from xileh.utils.datahandler.type_utils.utils import (
     is_unprepared_type_dict, is_outermost_unprepared_type_dict)
 
-from datahandler.saver.serialize import prepare_for_serialization
+from xileh.utils.datahandler.saver.serialize import prepare_for_serialization
 
 
 def prepare(res, fname, mode=None, array_threshold=10000):

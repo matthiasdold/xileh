@@ -12,6 +12,11 @@ from testing.datahandler_tests.utils import _compare_container
 
 @pytest.fixture  # TODO: does this need to be a fixture..?
 def data():
+    # This is covering the following data types:
+    # named_tuples
+    # basic types (None, str, int, float, tuple, list, bool, path)
+    # mne.Epochs
+    # pandas.Series and pandas.DataFrames
     data = create_fake_data(add_nested=True)
     return data
 

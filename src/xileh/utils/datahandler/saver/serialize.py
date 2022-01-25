@@ -124,6 +124,7 @@ def _prepare_tuple_for_serialization(value, fname=None, key=None, mode=None):
 
 def _prepare_array_for_serialization(value, fname=None, key=None, mode=None,
                                      array_threshold=1000):
+
     array_threshold = int(array_threshold)
 
     if np.isnan(value).any():

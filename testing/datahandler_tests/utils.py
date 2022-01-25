@@ -7,7 +7,8 @@ import pandas as pd
 from mne import EpochsArray
 from datetime import datetime
 
-from datahandler.type_utils.named_tuples import isinstance_namedtuple
+from xileh.utils.datahandler.type_utils.named_tuples import (
+    isinstance_namedtuple)
 
 
 class NotEqual(Exception):
