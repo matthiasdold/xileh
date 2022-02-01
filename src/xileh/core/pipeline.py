@@ -5,7 +5,7 @@
 # class, which will be a certain realization of
 # the basic "helix" -> set of operations and data
 #
-# container
+# The pipeline implementations
 
 import numpy as np
 
@@ -48,7 +48,7 @@ class xPipeline(object):
 
     def pretty_print_get_steps(self):
         step_names = [f"'{s[0]}'" for s in self._steps]
-        return ' -> '.join(step_names)
+        return '\n\t-> ' + '\n\t-> '.join(step_names)
 
     def check_step_foo(self, step_foo):
         """ Check the tuple formulating a step function

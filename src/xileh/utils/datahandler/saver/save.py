@@ -46,5 +46,4 @@ def save(res, fname='test_dir', mode='json', fname_mapping=None,
         _save(res, fname=fname, mode=mode, fname_mapping=fname_mapping,
               array_threshold=array_threshold)
     except Exception as e:
-        shutil.rmtree(fname)
         raise e
