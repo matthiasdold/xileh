@@ -357,7 +357,7 @@ class xPData(object):
         ddata['header'] = self.header
         ddata['meta'] = self.meta
 
-        rdict = {self.name: ddata, 'type': 'xPData'}
+        rdict = {self.name: ddata, 'datatype': 'xPData'}
         return rdict
 
     def save(self, fname):
@@ -422,12 +422,13 @@ def from_dict(d):
         the pipeline data instance according to the data in d
     """
 
-    assert d['type'] == 'xPData', "Dictionary needs to represent a xPData"\
-        " object which needs a type=='xPData' key:value pair"
+    assert d['datatype'] == 'xPData', "Dictionary needs to represent a xPData"\
+        " object which needs a datatype=='xPData' key:value pair"
 
-    names = [k for k in d.keys() if k != 'type']
+    names = [k for k in d.keys() if k != 'datatype']
     assert len(names) == 1, "Unknown structure for casting dict to xPData"\
-        " - expected one key for the container name and one 'type' nothing more"
+        " - expected one key for the container name + one 'datatype' "\
+        "nothing more"
 
     elms = d[names[0]]
 

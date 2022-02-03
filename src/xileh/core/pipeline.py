@@ -82,7 +82,8 @@ class xPipeline(object):
         """
 
         # check that name is not yet used
-        assert all([step_foo[0] != t[0] for t in self._steps])
+        assert all([step_foo[0] != t[0] for t in self._steps]), "Name already"\
+            " in pipeline steps names"
         step_foo = self.check_step_foo(step_foo)
 
         self._steps.append(step_foo)
