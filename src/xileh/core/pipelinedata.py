@@ -425,10 +425,16 @@ def from_dict(d):
         the pipeline data instance according to the data in d
     """
 
-    assert d['datatype'] == 'xPData', "Dictionary needs to represent a xPData"\
-        " object which needs a datatype=='xPData' key:value pair"
+    if 'type' in d.keys() and d['type'] == 'xPData':
+        # legacy loading
+        type_key = 'type'
+    else:
+        type_key = 'datatype'
 
-    names = [k for k in d.keys() if k != 'datatype']
+    assert d[type_key] == 'xPData', "Dictionary needs to represent a xPData"\
+        " object which needs a datatype=='xPData' key:value pair"
+    names = [k for k in d.keys() if k != type_key]
+
     assert len(names) == 1, "Unknown structure for casting dict to xPData"\
         " - expected one key for the container name + one 'datatype' "\
         "nothing more"
@@ -453,8 +459,8 @@ def from_dict(d):
     # not work for the recursive check of the get_by_name(), -> do not consider
     if isinstance(elms['data'], list):
         for i, elm in enumerate(elms['data']):
-            if (isinstance(elm, dict) and 'datatype' in elm.keys()
-                    and elm['datatype'] == 'xPData'):
+            if (isinstance(elm, dict) and type_key in elm.keys()
+                    and elm[type_key] == 'xPData'):
                 elms['data'][i] = from_dict(elm)
 
     return xPData(elms['data'],
