@@ -93,8 +93,10 @@ def save_to_file(data, fname='', overwrite=False):
     save = True
 
     fname = Path(fname).resolve()
-    if overwrite:
-        if fname.exists():
+    if fname.exists():
+        if overwrite:
+            pass
+        else:
             q = ''
             while q not in ['y', 'n']:
                 q = input(f"There is already a container at {fname}\n Do you"
@@ -110,9 +112,8 @@ def save_to_file(data, fname='', overwrite=False):
         serializable_data = save_dict_with_non_serializables(data, fname)
 
         # the rest should be full serializeable and the layout should be ready
-        if overwrite:
-            yaml.safe_dump(serializable_data,
-                           open(fname.joinpath('container.yaml'), 'w'))
+        yaml.safe_dump(serializable_data,
+                       open(fname.joinpath('container.yaml'), 'w'))
 
 
 def save_dict_with_non_serializables(data, fname):

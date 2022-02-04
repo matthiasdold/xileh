@@ -32,10 +32,6 @@ def _compare_container(obj_1, obj_2, key=""):
             # pdb.set_trace()
             raise NotEqual(f'Floats not equal! {key=}, {obj_1=}, {obj_2=}')
 
-    elif isinstance_namedtuple(obj_1) and isinstance_namedtuple(obj_2):
-        print("Comparing elements of named lists going deeper")
-        _compare_container(obj_1._asdict(), obj_2._asdict(), key=key)
-
     elif type(obj_1) is not type(obj_2):
         # after here we know the objs are of same type
         # handle bug involving importlib.util type mismatch

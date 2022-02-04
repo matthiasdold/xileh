@@ -14,6 +14,7 @@ from xileh.core.pipelinedata import xPData, from_container
 from xileh.core.pipelinedata import CheckedList
 from xileh.core.pipelinedata import from_dict
 
+from testing.compare_utils import _compare_container
 
 
 @pytest.fixture
@@ -131,7 +132,7 @@ def test_checked_list():
     chk_list.append('a')
     assert chk_list == ['a']
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(KeyError):
         chk_list.append(xPData([1, 2, 4], header={'name': 'test'}))
 
 
@@ -141,9 +142,6 @@ def test_checked_list_container(get_nested_test_data):
     """
     td = get_nested_test_data
     assert isinstance(td.data, CheckedList)
-
-    with pytest.raises(AssertionError):
-        td.data.append(xPData([1], header={'name': 'search_target'}))
 
 
 def test_name_attribute():
@@ -186,7 +184,7 @@ def test__to_dict(get_nested_test_data):
     # we only have one outer container
     assert len(list(dtd.keys())) == 2, "Dict of xPData should have 2 outer key"
     assert list(dtd.keys())[0] == td.name, "Name missmatch"
-    assert list(dtd.keys())[1] == 'type' and dtd['type'] == 'xPData', \
+    assert list(dtd.keys())[1] == 'datatype' and dtd['datatype'] == 'xPData', \
         "Missing a type==xPData key:value pair"
 
     # lists conserved
@@ -251,8 +249,6 @@ def test_save_and_load(get_nested_test_data):
 
         loaded = from_container(fname)
 
-        for cn in loaded.get_container_names():
-            assert loaded[cn].data == get_nested_test_data[cn].data, \
-                f"Missmatch for {cn}"
-
-
+        # Containers will be the same if dictionaries aggree
+        _compare_container(get_nested_test_data._to_dict(),
+                           loaded._to_dict())

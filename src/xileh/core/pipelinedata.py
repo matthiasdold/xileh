@@ -11,7 +11,8 @@
 import warnings
 import numpy as np
 
-from xileh.utils.datahandler import saver
+from xileh.utils.datahandler.saving import save_to_file
+from xileh.utils.datahandler.loading import load_container
 
 
 class xPData(object):
@@ -369,7 +370,7 @@ class xPData(object):
             folder path and name to store the data to
         """
 
-        saver.save(self._to_dict(), fname=fname)
+        save_to_file(self._to_dict(), fname=fname)
 
 
 class CheckedList(list):
@@ -396,10 +397,12 @@ class CheckedList(list):
             the object to append
 
         """
-        if isinstance(elm, xPData):
-            assert elm.header['name'] not in self.xpdata.get_container_names(), \
-                f"Data container '{self.xpdata}' already containes a container"\
-                f" with name '{elm.header['name']}', names need to be unique."
+        print(elm)
+        if (isinstance(elm, xPData)
+                and elm.header['name'] in self.xpdata.get_container_names()):
+            raise KeyError(f"Data container '{self.xpdata}' already containes "
+                           f"a container with name '{elm.header['name']}', "
+                           "names need to be unique.")
 
         super(CheckedList, self).append(elm)
 
@@ -450,8 +453,8 @@ def from_dict(d):
     # not work for the recursive check of the get_by_name(), -> do not consider
     if isinstance(elms['data'], list):
         for i, elm in enumerate(elms['data']):
-            if (isinstance(elm, dict) and 'type' in elm.keys()
-                    and elm['type'] == 'xPData'):
+            if (isinstance(elm, dict) and 'datatype' in elm.keys()
+                    and elm['datatype'] == 'xPData'):
                 elms['data'][i] = from_dict(elm)
 
     return xPData(elms['data'],
@@ -472,7 +475,7 @@ def from_container(cpath):
     pdata : xPData
         a pipelinedata container loaded from cpath
     """
-    pdata = from_dict(saver.load(cpath, unprepare_output=True))
+    pdata = from_dict(load_container(cpath))
 
     return pdata
 

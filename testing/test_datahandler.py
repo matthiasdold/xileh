@@ -1,22 +1,23 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-#
-# author: Matthias Dold
-# date: 20220201
-#
-# Generic tests for saving and loading data
+from testing.test_pipelinedata import get_nested_test_data
+from testing.compare_utils import _compare_container
 
-import pandas as pd
-import numpy as np
+from xileh.utils.datahandler.saving import save_to_file
+from xileh.utils.datahandler.loading import load_container
 
-from xileh.utils.datahandler.saving import (dict_in_iterable,
-                                            non_serializeable_types,
-                                            non_serializeable_in_iterable
-                                            )
+from pathlib import Path
+
+import tempfile
 
 
-df = pd.DataFrame({'A': [1, 2, 3], 'B': ['a', 'b', 'c']})
-s = pd.Series({'my_s': [1, 2, 3, 4]})
-a = np.ones((3, 3, 6))
+def test_save_load_cycle_with_dict(get_nested_test_data):
+    d = get_nested_test_data._to_dict()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        fpath = Path(tmp, 'test_container')
+
+        save_to_file(d, fname=fpath)
+        ld = load_container(fpath)
+
+    _compare_container(d, ld)
 
 

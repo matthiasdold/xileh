@@ -96,3 +96,5 @@ def load_container(fname, serializeable_only=False):
     if not serializeable_only:
         d = load_extra_data_in_dict(d)
 
+    return d
+
