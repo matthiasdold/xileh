@@ -18,6 +18,8 @@ from functools import wraps
 import pandas as pd
 import numpy as np
 
+import mne
+
 
 def prepare_save(func):
     """ Prepare for any saver function by e.g. creating the fname """
@@ -75,7 +77,27 @@ def numpy_saver(data, fname=Path()):
     # complete the prefix and store
     fname = fname.parent.joinpath(fname.stem + 'numpy.npy')
     np.save(fname, data)
+    return {'extra_fname': str(fname), 'type': str(type(data))}
 
+
+@prepare_save
+def mne_save_raw(data, fname=Path()):
+    fname = fname.parent.joinpath(fname.stem + 'raw.fif')
+    data.save(fname)
+    return {'extra_fname': str(fname), 'type': str(type(data))}
+
+
+@prepare_save
+def mne_save_epo(data, fname=Path()):
+    fname = fname.parent.joinpath(fname.stem + 'epo.fif')
+    data.save(fname)
+    return {'extra_fname': str(fname), 'type': str(type(data))}
+
+
+@prepare_save
+def mne_save_ica(data, fname=Path()):
+    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
+    data.save(fname)
     return {'extra_fname': str(fname), 'type': str(type(data))}
 
 
@@ -86,12 +108,24 @@ def transform_paths(data, fname=Path()):
     return {'transformed_data': str(data), 'type': str(type(data))}
 
 
+@prepare_save
+def transform_named_int(data, fname=Path()):
+    """ Cast paths to string for saving in yaml """
+    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
+    return {'transformed_data': str(data), 'type': str(type(data))}
+
+
 # Note: types work as dict keys as well - nice
 non_serializeable_types = {
     pd.core.frame.DataFrame: pandas_saver,
     pd.core.series.Series: pandas_saver,
     np.ndarray: numpy_saver,
-    Path: transform_paths
+    mne.BaseEpochs: mne_save_epo,
+    mne.io.BaseRaw: mne_save_raw,
+    mne.io.RawArray: mne_save_raw,
+    mne.preprocessing.ICA: mne_save_ica,
+    Path: transform_paths,
+    mne.utils._bunch.NamedInt: transform_named_int,         # why mne, just why...
 }
 
 
@@ -201,5 +235,6 @@ def save_non_serializable(v, fname):
         return get_saver(v)(v, fname=fname)
     elif isinstance(v, dict):
         return save_dict_with_non_serializables(v, fname)
+
     else:
         return v

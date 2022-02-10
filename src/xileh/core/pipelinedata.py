@@ -415,7 +415,6 @@ class CheckedList(list):
             the object to append
 
         """
-        print(elm)
         if (isinstance(elm, xPData)
                 and elm.header['name'] in self.xpdata.get_container_names()):
             raise KeyError(f"Data container '{self.xpdata}' already containes "
