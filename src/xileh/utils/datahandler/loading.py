@@ -40,11 +40,16 @@ loaders_dict = {
 
 def get_loader(datatype):
     tp = datatype.split(' ')[1].replace('>', '').replace("'", "")
+    # check for an appropriate ancestor
+    loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
 
-    try:
-        return loaders_dict[eval(tp)]
-    except KeyError:
-        raise NotImplementedError(f"No loader implemented for {datatype=}")
+    if loader == []:
+        raise NotImplementedError(f"No loader implemented for {tp=}")
+    elif len(loader) > 1:
+        raise ValueError("Encountered an abigous implementation of loards"
+                         " please report this to the package maintainers")
+
+    return loader[0]
 
 
 # =============================================================================
@@ -53,16 +58,17 @@ def get_loader(datatype):
 
 def load_extra_data_in_dict(d):
     """ Go over all key val pairs an load of extra data is present """
+    # if in lowest layer of extra data
+    if d.keys() == {'extra_fname', 'type'}:
+        # if in lowest layer
+        return get_loader(d['type'])(d['extra_fname'])
+    elif d.keys() == {'transformed_data', 'type'}:
+        return get_loader(d['type'])(d['transformed_data'])
 
+    # else check how to iterate further
     for k, v in d.items():
         if isinstance(v, dict):
-            # If is leaf node, we will have those two keys
-            if 'extra_fname' in v.keys() and 'type' in v.keys():
-                d[k] = get_loader(v['type'])(v['extra_fname'])
-            elif 'transformed_data' in v.keys() and 'type' in v.keys():
-                d[k] = get_loader(v['type'])(v['transformed_data'])
-            else:
-                d[k] = load_extra_data_in_dict(v)
+            d[k] = load_extra_data_in_dict(v)
         elif isinstance(v, (tuple, list)):
             d[k] = load_extra_data_in_iterable(v)
         else:
