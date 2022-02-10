@@ -9,11 +9,11 @@
 
 import yaml
 
-from pathlib import Path
-
-import pandas as pd
-import numpy as np
-
+# Note that during saving all types are saved from the root module with full
+# name -> so no pd or np aliases for recreation
+import pathlib
+import pandas
+import numpy
 
 # =============================================================================
 # The loaders
@@ -21,18 +21,30 @@ import numpy as np
 
 
 def load_pandas(fname):
-    return pd.read_hdf(fname)
+    return pandas.read_hdf(fname)
 
 
 def load_numpy(fname):
-    return np.load(fname)
+    return numpy.load(fname)
 
 
-loaders = {
-    str(pd.DataFrame): load_pandas,
-    str(pd.Series): load_pandas,
-    str(np.ndarray): load_numpy
+loaders_dict = {
+    pandas.DataFrame: load_pandas,
+    pandas.Series: load_pandas,
+    numpy.ndarray: load_numpy,
+    pathlib.Path: pathlib.Path,
+    pathlib.PosixPath: pathlib.Path,
+    pathlib.WindowsPath: pathlib.Path,
 }
+
+
+def get_loader(datatype):
+    tp = datatype.split(' ')[1].replace('>', '').replace("'", "")
+
+    try:
+        return loaders_dict[eval(tp)]
+    except KeyError:
+        raise NotImplementedError(f"No loader implemented for {datatype=}")
 
 
 # =============================================================================
@@ -46,7 +58,9 @@ def load_extra_data_in_dict(d):
         if isinstance(v, dict):
             # If is leaf node, we will have those two keys
             if 'extra_fname' in v.keys() and 'type' in v.keys():
-                d[k] = loaders[v['type']](v['extra_fname'])
+                d[k] = get_loader(v['type'])(v['extra_fname'])
+            elif 'transformed_data' in v.keys() and 'type' in v.keys():
+                d[k] = get_loader(v['type'])(v['transformed_data'])
             else:
                 d[k] = load_extra_data_in_dict(v)
         elif isinstance(v, (tuple, list)):
@@ -89,7 +103,7 @@ def load_extra_data(v):
 def load_container(fname, serializeable_only=False):
     """ Load the container at the path = fname """
 
-    fname = Path(fname).resolve()
+    fname = pathlib.Path(fname).resolve()
     d = yaml.safe_load(open(fname.joinpath('container.yaml'), 'r'))
 
     # do also load the data stored in extras
@@ -97,4 +111,3 @@ def load_container(fname, serializeable_only=False):
         d = load_extra_data_in_dict(d)
 
     return d
-

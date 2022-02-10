@@ -252,3 +252,22 @@ def test_save_and_load(get_nested_test_data):
         # Containers will be the same if dictionaries aggree
         _compare_container(get_nested_test_data._to_dict(),
                            loaded._to_dict())
+
+
+def test_rename(get_nested_test_data):
+
+    # rename a nested
+    get_nested_test_data.rename('test', 'test2')
+
+    assert ('test' not in get_nested_test_data.get_container_names()
+            and 'test2' in get_nested_test_data.get_container_names()), \
+        "Renaming failed"
+
+    # Outer container
+    get_nested_test_data.rename('outer_container', 'new_outer')
+
+    assert ('outer_container' not in get_nested_test_data.get_container_names()
+            and 'new_outer' in get_nested_test_data.get_container_names()), \
+        "Renaming failed"
+
+

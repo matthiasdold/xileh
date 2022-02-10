@@ -372,6 +372,24 @@ class xPData(object):
 
         save_to_file(self._to_dict(), fname=fname)
 
+    def rename(self, from_name, to_name):
+        """ Changes a containers name
+
+        Parameters
+        ----------
+        from_name : str
+            name of the container to rename
+        to_name : str
+            new name of the container
+        """
+
+        src = self.get_by_name(from_name)
+        src.header['name'] = to_name
+
+
+
+
+
 
 class CheckedList(list):
 

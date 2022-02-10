@@ -51,12 +51,18 @@ def prepare_save(func):
 
 # wrapping with prepare save ensures some common preprocessing (and identifies saver functions)     # noqa
 @prepare_save
+def save_serializable(data, fname=Path()):
+    # get rid of the extra folder which is needed for all other loaders
+    fname = fname.parents[1]
+    yaml.safe_dump(data, open(fname.joinpath('container.yaml'), 'w'))
+
+
+@prepare_save
 def pandas_saver(data, fname=Path()):
     """ Store pandas data objects """
 
     # complete the prefix and store
     fname = fname.parent.joinpath(fname.stem + 'pandas.hdf')
-
     data.to_hdf(fname, 'group1')
 
     return {'extra_fname': str(fname), 'type': str(type(data))}
@@ -68,10 +74,16 @@ def numpy_saver(data, fname=Path()):
 
     # complete the prefix and store
     fname = fname.parent.joinpath(fname.stem + 'numpy.npy')
-
     np.save(fname, data)
 
     return {'extra_fname': str(fname), 'type': str(type(data))}
+
+
+@prepare_save
+def transform_paths(data, fname=Path()):
+    """ Cast paths to string for saving in yaml """
+    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
+    return {'transformed_data': str(data), 'type': str(type(data))}
 
 
 # Note: types work as dict keys as well - nice
@@ -79,7 +91,22 @@ non_serializeable_types = {
     pd.core.frame.DataFrame: pandas_saver,
     pd.core.series.Series: pandas_saver,
     np.ndarray: numpy_saver,
+    Path: transform_paths
 }
+
+
+def get_saver(data):
+    """ Get the correct saver for a given data type """
+    # NOTE this is done instead of directly looking up in the dict,
+    # as this avoids needing to include every subclass since check is done
+    # via isinstance
+
+    # This works for the mne types:
+    for k, v in non_serializeable_types.items():
+        if isinstance(data, k):
+            return v
+
+    raise NotImplementedError(f"No loader implemented for type={type(data)}")
 
 
 # =============================================================================
@@ -110,10 +137,7 @@ def save_to_file(data, fname='', overwrite=False):
 
     if save:
         serializable_data = save_dict_with_non_serializables(data, fname)
-
-        # the rest should be full serializeable and the layout should be ready
-        yaml.safe_dump(serializable_data,
-                       open(fname.joinpath('container.yaml'), 'w'))
+        save_serializable(serializable_data, fname=fname)
 
 
 def save_dict_with_non_serializables(data, fname):
@@ -174,9 +198,8 @@ def save_non_serializables_in_iterable(iter, fname):
 
 def save_non_serializable(v, fname):
     if isinstance(v, tuple(non_serializeable_types.keys())):
-        return non_serializeable_types[type(v)](v, fname=fname)
+        return get_saver(v)(v, fname=fname)
     elif isinstance(v, dict):
         return save_dict_with_non_serializables(v, fname)
     else:
         return v
-
