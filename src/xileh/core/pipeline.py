@@ -189,7 +189,7 @@ class xPipeline(object):
             self._logger.info(f"Evaluating pipeline <{self.__hash__()}> with"
                               f" data <{pdata.__hash__()}>")
 
-        steps_iterator = tqdm(self._steps)
+        steps_iterator = tqdm(self._steps, position=0, leave=True)
         for i, step in enumerate(steps_iterator):
             steps_iterator.set_description(f"Processing step: {step[0]}")
 
