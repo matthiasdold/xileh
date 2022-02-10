@@ -314,7 +314,7 @@ class xPData(object):
     def delete_by_name(self, name):
         """Look for a subcontainer with the given name and drop it"""
 
-        # Sub containers will always be part of a list or the only .data element
+        # Sub containers will always be part of a list or the only .data element            # noqa
         # In both cases it is ok to return a list (potentially empty)
 
         # make sure it is there
@@ -387,10 +387,6 @@ class xPData(object):
         src.header['name'] = to_name
 
 
-
-
-
-
 class CheckedList(list):
 
     """ A helper list class for which the append method will be linked
@@ -449,7 +445,8 @@ def from_dict(d):
         type_key = 'datatype'
 
     assert d[type_key] == 'xPData', "Dictionary needs to represent a xPData"\
-        " object which needs a datatype=='xPData' key:value pair"
+        " object which needs a datatype=='xPData' key:value pair - received"\
+        f" {d}"
     names = [k for k in d.keys() if k != type_key]
 
     assert len(names) == 1, "Unknown structure for casting dict to xPData"\
@@ -561,19 +558,19 @@ if __name__ == "__main__":
 
     # tested with methodtools.lru_cache
     # In [31]: %timeit tdata.get_by_name('testdata')
-    # 1.49 µs ± 104 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+    # 1.49 µs ± 104 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)            # noqa
     # In [35]: %timeit tdata.get_by_name('deepest')
     # 1.46 µs ± 21.1 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)           # noqa
     # In [47]: %timeit tdata_long_list.get_by_name('some_name_9')
-    # 1.4 µs ± 17.7 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+    # 1.4 µs ± 17.7 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)            # noqa
     # In [51]: %timeit tdata_long_list.get_by_name('some_name_0')
-    # 1.4 µs ± 13.9 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+    # 1.4 µs ± 13.9 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)            # noqa
 
     # without methodtools.lru_cache
     # In [33]: %timeit tdata.get_by_name('testdata')
-    # 360 ns ± 4.96 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)
+    # 360 ns ± 4.96 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)            # noqa
     # In [40]: %timeit tdata.get_by_name('deepest')
-    # 2.22 µs ± 39.7 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
+    # 2.22 µs ± 39.7 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)            # noqa
     # ... Most realistic worst case
     # In [44]: %timeit tdata_long_list.get_by_name('some_name_9')
     # 6.21 µs ± 162 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)

@@ -15,6 +15,8 @@ import pathlib
 import pandas
 import numpy
 
+from warnings import warn
+
 # =============================================================================
 # The loaders
 # =============================================================================
@@ -26,10 +28,6 @@ def load_pandas(fname):
 
 def load_numpy(fname):
     return numpy.load(fname)
-
-
-def transform_str_to_path(pathstr):
-    return pathlib.Path(pathstr)
 
 
 def mne_load_raw(fname):
@@ -54,9 +52,7 @@ loaders_dict = {
     pandas.DataFrame: load_pandas,
     pandas.Series: load_pandas,
     numpy.ndarray: load_numpy,
-    pathlib.Path: transform_str_to_path,
-    pathlib.PosixPath: transform_str_to_path,
-    pathlib.WindowsPath: transform_str_to_path,
+    pathlib.Path: pathlib.Path,
     mne.io.BaseRaw: mne_load_raw,
     mne.io.RawArray: mne_load_raw,
     mne.preprocessing.ICA: mne_load_ica,
@@ -75,14 +71,15 @@ def get_loader(datatype):
     if loader == []:
         raise NotImplementedError(f"No loader implemented for {tp=}")
     elif len(loader) > 1:
-        raise ValueError("Encountered an abigous implementation of loards"
-                         " please report this to the package maintainers")
+        warn("Encountered an ambigous implementation of loaders for:"
+             f" {tp=} - {loader}\n--> will continue with first: {loader[0]}")
 
     return loader[0]
 
 # =============================================================================
 # Script
 # =============================================================================
+
 
 def load_extra_data_in_dict(d):
     """ Go over all key val pairs an load of extra data is present """
