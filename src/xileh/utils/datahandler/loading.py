@@ -6,6 +6,8 @@
 #
 # The loading functionality
 
+import mne
+
 import toml
 import yaml
 
