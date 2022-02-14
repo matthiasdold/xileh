@@ -5,12 +5,10 @@
 # date: 20220201
 #
 # functionality for saving an xileh container
-#
-# [ ] TODO -> think about how to best extract some specific dependencies
-#             like mne which might not be needed for every user
+
 
 import shutil
-import yaml
+import toml
 
 from pathlib import Path
 from functools import wraps
@@ -54,7 +52,12 @@ def prepare_save(func):
 def save_serializable(data, fname=Path()):
     # get rid of the extra folder which is needed for all other loaders
     fname = fname.parents[1]
-    yaml.safe_dump(data, open(fname.joinpath('container.yaml'), 'w'))
+
+    # the NumpyEncoder is the reason for using toml all together
+    # as yaml fails if e.g. a numpy.float64 float is presented
+    toml.dump(data, open(fname.joinpath('container.toml'), 'w'),
+              encoder=toml.TomlNumpyEncoder()
+              )
 
 
 @prepare_save
@@ -81,7 +84,7 @@ def numpy_saver(data, fname=Path()):
 
 @prepare_save
 def transform_paths(data, fname=Path()):
-    """ Cast paths to string for saving in yaml """
+    """ Cast paths to string """
     fname = fname.parent.joinpath(fname.stem + 'ica.fif')
     return {'transformed_data': str(data), 'type': str(type(data))}
 

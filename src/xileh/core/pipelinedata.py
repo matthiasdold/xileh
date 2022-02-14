@@ -476,6 +476,11 @@ def from_dict(d):
                     and elm[type_key] == 'xPData'):
                 elms['data'][i] = from_dict(elm)
 
+    # add an empty meta if missing --> load from toml instead yaml would cause
+    # this
+    if 'meta' not in elms.keys():
+        elms['meta'] = {}
+
     return xPData(elms['data'],
                   header=elms['header'],
                   meta=elms['meta'])
