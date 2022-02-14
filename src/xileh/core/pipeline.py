@@ -12,7 +12,6 @@ import numpy as np
 from tqdm import tqdm
 
 from xileh.core.pipelinedata import xPData as PData
-from xileh.core.features import create_features
 from xileh.utils.logger import PlainLogger
 
 
@@ -217,6 +216,10 @@ if __name__ == "__main__":
         meta={'mean': 5},
         name='testing_container'
     )
+
+    def create_features(pdata):
+        # do something
+        return pdata
 
     xpl = xPipeline('testp', verbose=True)
     xpl.add_step(('c22 extract', create_features, {'algo': 'c22'}))
