@@ -6,7 +6,7 @@
 #
 # The loading functionality
 
-import mne
+import toml
 import yaml
 
 # Note that during saving all types are saved from the root module with full
@@ -64,6 +64,8 @@ loaders_dict = {
 def get_loader(datatype):
 
     tp = datatype.split(' ')[1].replace('>', '').replace("'", "")
+    # check for an appropriate ancestor
+    loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
 
     # check for an appropriate ancestor
     loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
@@ -83,6 +85,12 @@ def get_loader(datatype):
 
 def load_extra_data_in_dict(d):
     """ Go over all key val pairs an load of extra data is present """
+    # if in lowest layer of extra data
+    if d.keys() == {'extra_fname', 'type'}:
+        # if in lowest layer
+        return get_loader(d['type'])(d['extra_fname'])
+    elif d.keys() == {'transformed_data', 'type'}:
+        return get_loader(d['type'])(d['transformed_data'])
 
     # if in lowest layer of extra data
     if d.keys() == {'extra_fname', 'type'}:
@@ -136,7 +144,12 @@ def load_container(fname, serializeable_only=False):
     """ Load the container at the path = fname """
 
     fname = pathlib.Path(fname).resolve()
-    d = yaml.safe_load(open(fname.joinpath('container.yaml'), 'r'))
+
+    # check for a container.toml or container.yaml
+    try:
+        d = toml.load(open(fname.joinpath('container.toml'), 'r'))
+    except FileNotFoundError:
+        d = yaml.safe_load(open(fname.joinpath('container.yaml'), 'r'))
 
     # do also load the data stored in extras
     if not serializeable_only:

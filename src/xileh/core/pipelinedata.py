@@ -314,7 +314,7 @@ class xPData(object):
     def delete_by_name(self, name):
         """Look for a subcontainer with the given name and drop it"""
 
-        # Sub containers will always be part of a list or the only .data element            # noqa
+        # Sub containers will always be part of a list or the only .data elemnt
         # In both cases it is ok to return a list (potentially empty)
 
         # make sure it is there
@@ -477,6 +477,11 @@ def from_dict(d):
                     and elm[type_key] == 'xPData'):
                 elms['data'][i] = from_dict(elm)
 
+    # add an empty meta if missing --> load from toml instead yaml would cause
+    # this
+    if 'meta' not in elms.keys():
+        elms['meta'] = {}
+
     return xPData(elms['data'],
                   header=elms['header'],
                   meta=elms['meta'])
@@ -558,7 +563,7 @@ if __name__ == "__main__":
 
     # tested with methodtools.lru_cache
     # In [31]: %timeit tdata.get_by_name('testdata')
-    # 1.49 µs ± 104 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)            # noqa
+    # 1.49 µs ± 104 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)        # noqa
     # In [35]: %timeit tdata.get_by_name('deepest')
     # 1.46 µs ± 21.1 ns per loop (mean ± std. dev. of 7 runs, 1000000 loops each)           # noqa
     # In [47]: %timeit tdata_long_list.get_by_name('some_name_9')
