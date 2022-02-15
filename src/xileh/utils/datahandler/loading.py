@@ -8,7 +8,7 @@
 
 import mne
 
-import toml
+import tomli
 import yaml
 
 # Note that during saving all types are saved from the root module with full
@@ -149,7 +149,7 @@ def load_container(fname, serializeable_only=False):
 
     # check for a container.toml or container.yaml
     try:
-        d = toml.load(open(fname.joinpath('container.toml'), 'r'))
+        d = tomli.load(open(fname.joinpath('container.toml'), 'rb'))
     except FileNotFoundError:
         d = yaml.safe_load(open(fname.joinpath('container.yaml'), 'r'))
 
