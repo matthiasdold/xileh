@@ -22,7 +22,7 @@ class xPipeline(object):
     by scipy's pipeline
     """
 
-    def __init__(self, name, verbose=False, log_eval=bool):
+    def __init__(self, name, verbose=False, log_eval=False):
         """ Setup with just populating the name for now
 
         Parameters
@@ -144,6 +144,14 @@ class xPipeline(object):
                      if t[0] == name][0]
 
         return step, idx
+
+    @property
+    def steps(self):
+        return self._steps
+
+    @steps.setter
+    def steps(self, steps):
+        self._steps = steps
 
     def replace_step(self, name, step_foo):
         """ Replace a function given its name
