@@ -9,6 +9,7 @@
 
 import shutil
 import toml
+import orjson
 
 from pathlib import Path
 from functools import wraps
@@ -57,9 +58,18 @@ def save_serializable(data, fname=Path()):
 
     # the NumpyEncoder is the reason for using toml all together
     # as yaml fails if e.g. a numpy.float64 float is presented
+
     toml.dump(data, open(fname.joinpath('container.toml'), 'w'),
               encoder=toml.TomlNumpyEncoder()
               )
+    # option = (
+    #     orjson.OPT_SERIALIZE_NUMPY |            # should be able to work with numpy.float etc.      # noqa
+    #     orjson.OPT_NAIVE_UTC |
+    #     orjson.OPT_OMIT_MICROSECONDS |
+    #     orjson.OPT_INDENT_2
+    # )
+    # with open(fname.joinpath('container.toml'), 'wb') as f:
+    #     f.write(orjson.dumps(data, option=option))
 
 
 @prepare_save
