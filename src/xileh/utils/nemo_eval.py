@@ -26,6 +26,12 @@
 #     e.g. a simply print("something") will write a line with "something"
 #     this is also used to check if an error in evaluting the data on the
 #     pipeline occured
+#
+# Some usefull nemo commands:
+#   `qstat -f` - shows detailed info on all submitted jobs
+#
+#
+#
 
 import os
 import dill
@@ -151,8 +157,8 @@ def validate_data(pdata,
     non_uniques = [plh for plh in set(pl_hashes) if pl_hashes.count(plh) > 1]
     names = [plh[2] for plh in pl_hashes]
     non_unique_n = [n for n in set(names) if names.count(n) > 1]
-    assert non_uniques == [], "Pipelines in list have to be unique -> copy and"\
-        f" change the names for: {non_uniques}"
+    assert non_uniques == [], "Pipelines in list have to be unique -> copy "\
+        f" and change the names for: {non_uniques}"
     assert non_unique_n == [], "Pipeline names have to be unique -> copy and"\
         f" change names for: {non_unique_n}"
 
