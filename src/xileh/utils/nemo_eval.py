@@ -234,6 +234,9 @@ def pack_pipelines_and_data_to_pickle(pdata):
     data = pdata.get_by_name('data').data
     udata = list(set(data))
 
+    # make sure local temp exists
+    conf['local_pickle_tmp'].mkdir(exist_ok=True, parents=True)
+
     # Use the hash for identification
     pipeline_files = []
     data_files = []
