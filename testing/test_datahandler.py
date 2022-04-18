@@ -2,8 +2,13 @@ from testing.test_pipelinedata import get_nested_test_data
 from testing.compare_utils import _compare_container
 
 from xileh.utils.datahandler.saving import save_to_file
-from xileh.utils.datahandler.loading import load_container
+from xileh.utils.datahandler.loading import (load_container,
+                                             get_loader,
+                                             load_pandas,
+                                             load_numpy,
+                                             )
 
+import pathlib
 from pathlib import Path
 
 import tempfile
@@ -19,5 +24,16 @@ def test_save_load_cycle_with_dict(get_nested_test_data):
         ld = load_container(fpath)
 
     _compare_container(d, ld)
+
+
+def test_get_loader():
+    # check loader is working for individual file types
+    assert get_loader("<type pathlib.Path>") == pathlib.Path
+    assert get_loader("<type pathlib.PosixPath>") == pathlib.Path
+    assert get_loader("<type pathlib.WindowsPath>") == pathlib.Path
+    assert get_loader("<type pandas.DataFrame>") == load_pandas
+    assert get_loader("<type pandas.Series>") == load_pandas
+    assert get_loader("<type numpy.ndarray>") == load_numpy
+
 
 
