@@ -70,8 +70,8 @@ def get_loader(datatype):
     # check for an appropriate ancestor
     loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
 
-    # check for an appropriate ancestor
-    loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
+    # due to inheritance paths might return twice the same loader, get only unique          # noqa
+    loader = list(set(loader))
 
     if loader == []:
         raise NotImplementedError(f"No loader implemented for {tp=}")

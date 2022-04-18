@@ -161,7 +161,7 @@ def get_saver(data):
 # =============================================================================
 
 
-def save_to_file(data, fname='', overwrite=False):
+def save_to_file(data: dict, fname: str = '', overwrite: bool = False):
     """ Save data in the dictionary to a given folder """
     # --> if there would be an overwrite and it is not specified, ask
     save = True
@@ -187,7 +187,7 @@ def save_to_file(data, fname='', overwrite=False):
         save_serializable(serializable_data, fname=fname)
 
 
-def save_dict_with_non_serializables(data, fname):
+def save_dict_with_non_serializables(data: dict, fname: Path):
     """
     Save the non serializeable data with its according saver functions.
 
@@ -251,3 +251,16 @@ def save_non_serializable(v, fname):
 
     else:
         return v
+
+
+if __name__ == '__main__':
+    from xileh import xPData
+    import numpy as np
+    pdata = xPData([xPData(np.ones(1000), name='some_numpy'),
+                    xPData('test', name='some_text')],
+                   name='test_container')
+
+    data = pdata._to_dict()
+
+
+
