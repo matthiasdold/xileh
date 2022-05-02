@@ -41,6 +41,14 @@ def get_nested_test_data():
                 header={'name': '1st_level_child'},
             ),
             xPData(
+                data=[
+                    xPData(data=np.eye(3), header={'name': 'test2'}),
+                    xPData(data=[1, 23, 4],
+                           header={'name': 'somename2'})
+                ],
+                header={'name': 'string_nest_c'},
+            ),
+            xPData(
                 data=np.ones(3),
                 header={'name': 'search_target',
                         'discription': 'We will search for this'}
@@ -93,7 +101,7 @@ def test_header(get_test_data):
 def test_get_by_name(get_nested_test_data):
     td = get_nested_test_data
 
-    assert td.get_by_name('search_target') == td.data[1]
+    assert td.get_by_name('search_target') == td.data[2]
     assert isinstance(td.get_by_name('new', create_if_missing=True), xPData)
     assert 'new' in td.get_container_names()
 
@@ -269,5 +277,42 @@ def test_rename(get_nested_test_data):
     assert ('outer_container' not in get_nested_test_data.get_container_names()
             and 'new_outer' in get_nested_test_data.get_container_names()), \
         "Renaming failed"
+
+
+def test_get_and_set_by_attribute(get_nested_test_data):
+    td = get_nested_test_data
+
+    # attributes are created and can be accessed
+    assert td.search_target == td['search_target']
+    assert td.string_nest_c.test2 == td['test2']
+
+    # setting via attr works
+    # -- simple value case
+    td.search_target.data = 12345
+    assert td.search_target.data == 12345
+
+    # -- adding a new container
+    newc = xPData([xPData([1241], name='newnest')], name='newcontainer')
+    td.string_nest_c.somename2 = newc
+    # --- setting will have copied the values over, so check by cannonic prop
+    assert td.string_nest_c.somename2.data == newc.data
+    assert td.string_nest_c.somename2.header == newc.header
+    assert td.string_nest_c.somename2.meta == newc.meta
+
+
+def test_attribute_removal(get_nested_test_data):
+    td = get_nested_test_data
+
+    td.delete_by_name('somename2')
+
+    assert 'somename2' not in td.get_container_names()
+
+    with pytest.raises(AttributeError, match='no attribute'):
+        td.string_nest_c.somename2
+
+
+
+
+
 
 
