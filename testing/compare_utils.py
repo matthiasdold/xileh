@@ -1,5 +1,6 @@
 from unittest import TestCase
 from pathlib import Path
+import pdb
 
 import mne
 import numpy as np
@@ -24,6 +25,8 @@ def _compare_container(obj_1, obj_2, key=""):
     :param obj_2: obj, thing you want to compare
     :param key: str, for printing error messages in recursion
     """
+
+
     if isinstance(obj_1, (int, float, np.integer)) and isinstance(
             obj_2, (int, float, np.integer)):
         # must be called before same type checking bc np.float64 != float
@@ -89,12 +92,22 @@ def _compare_container(obj_1, obj_2, key=""):
             _compare_container(x, y, key=key)
 
     elif isinstance(obj_1, dict):
-        for k, v in obj_1.items():
-            if k in obj_2:
-                print("Dict -> comparing by k: v pairs")
-                _compare_container(v, obj_2[k], key=k)
+        for k, v1 in obj_1.items():
+
+            # NOTE: this exception is created on purpose as toml would have
+            # problems with nest data structures including empty dicts
+            # --> e.g. a meta = {} in the nested sample data
+            # yaml was able to deal with this but falls short as it cannot
+            # handle numpy.float64 etc. ....
+            if isinstance(v1, dict) and v1 == {}:
+                pass
             else:
-                raise NotEqual(f'KeyError with dict:{key=}, {k=}')
+                try:
+                    v2 = obj_2[k]
+                    print("Dict -> comparing by k: v pairs")
+                    _compare_container(v1, v2, key=k)
+                except KeyError:
+                    raise NotEqual(f'KeyError with dict:{key=}, {k=}')
 
     elif isinstance(obj_1, EpochsArray):
 

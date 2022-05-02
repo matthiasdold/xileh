@@ -5,12 +5,11 @@
 # date: 20220201
 #
 # functionality for saving an xileh container
-#
-# [ ] TODO -> think about how to best extract some specific dependencies
-#             like mne which might not be needed for every user
+
 
 import shutil
-import yaml
+import toml
+import orjson
 
 from pathlib import Path
 from functools import wraps
@@ -56,7 +55,21 @@ def prepare_save(func):
 def save_serializable(data, fname=Path()):
     # get rid of the extra folder which is needed for all other loaders
     fname = fname.parents[1]
-    yaml.safe_dump(data, open(fname.joinpath('container.yaml'), 'w'))
+
+    # the NumpyEncoder is the reason for using toml all together
+    # as yaml fails if e.g. a numpy.float64 float is presented
+
+    toml.dump(data, open(fname.joinpath('container.toml'), 'w'),
+              encoder=toml.TomlNumpyEncoder()
+              )
+    # option = (
+    #     orjson.OPT_SERIALIZE_NUMPY |            # should be able to work with numpy.float etc.      # noqa
+    #     orjson.OPT_NAIVE_UTC |
+    #     orjson.OPT_OMIT_MICROSECONDS |
+    #     orjson.OPT_INDENT_2
+    # )
+    # with open(fname.joinpath('container.toml'), 'wb') as f:
+    #     f.write(orjson.dumps(data, option=option))
 
 
 @prepare_save
@@ -103,6 +116,13 @@ def mne_save_ica(data, fname=Path()):
 
 @prepare_save
 def transform_paths(data, fname=Path()):
+    """ Cast paths to string """
+    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
+    return {'transformed_data': str(data), 'type': str(type(data))}
+
+
+@prepare_save
+def transform_named_int(data, fname=Path()):
     """ Cast paths to string for saving in yaml """
     fname = fname.parent.joinpath(fname.stem + 'ica.fif')
     return {'transformed_data': str(data), 'type': str(type(data))}
@@ -148,7 +168,7 @@ def get_saver(data):
 # =============================================================================
 
 
-def save_to_file(data, fname='', overwrite=False):
+def save_to_file(data: dict, fname: str = '', overwrite: bool = False):
     """ Save data in the dictionary to a given folder """
     # --> if there would be an overwrite and it is not specified, ask
     save = True
@@ -174,7 +194,7 @@ def save_to_file(data, fname='', overwrite=False):
         save_serializable(serializable_data, fname=fname)
 
 
-def save_dict_with_non_serializables(data, fname):
+def save_dict_with_non_serializables(data: dict, fname: Path):
     """
     Save the non serializeable data with its according saver functions.
 
@@ -238,3 +258,16 @@ def save_non_serializable(v, fname):
 
     else:
         return v
+
+
+if __name__ == '__main__':
+    from xileh import xPData
+    import numpy as np
+    pdata = xPData([xPData(np.ones(1000), name='some_numpy'),
+                    xPData('test', name='some_text')],
+                   name='test_container')
+
+    data = pdata._to_dict()
+
+
+

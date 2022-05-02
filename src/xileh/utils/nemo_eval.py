@@ -26,6 +26,12 @@
 #     e.g. a simply print("something") will write a line with "something"
 #     this is also used to check if an error in evaluting the data on the
 #     pipeline occured
+#
+# Some usefull nemo commands:
+#   `qstat -f` - shows detailed info on all submitted jobs
+#
+#
+#
 
 import os
 import dill
@@ -59,7 +65,8 @@ def get_default_config():
         # for data transfer
         'nemo_shared_dir': Path('/home/fr/fr_fr/fr_md1104/tmp'),
         'local_pickle_tmp': Path('/tmp'),
-        'workspace_dir': Path('/work/ws/nemo/'),
+        'data_root_nemo': Path('/work/ws/nemo/'),
+        'data_root_local': Path('/work/ws/nemo/'),                                  # we replicate the local root with the bind mount command upon singularity start -> no need to adjust the paths in the scripts
         'singularity_container_dir': Path('/work/ws/nemo/fr_md1104-singularity_container-0/'),      # noqa
         'singularity_container_name': 'xileh_pd_interactive.sif',      # noqa
         # For unpickling to be possible, we need the scripts, including __main__
@@ -112,7 +119,7 @@ def get_eval_sh():
                 # cd <SINGULARITY_CONTAINER_DIR>              # work somewhere outside home, else singularity will not be able to access paths outside from home
 
                 # Note: make sure that the container is executeable
-                singularity exec --bind <WS_DIR>:<WS_DIR> <SINGULARITY_CONTAINER> python -c "import dill; from <__main__> import *; pl=dill.load(open('$PIPELINE_FILE', 'rb')); data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
+                singularity exec --bind <WS_DIR>:<WS_DIR_LOCAL> <SINGULARITY_CONTAINER> python -c "import dill; from <__main__> import *; pl=dill.load(open('$PIPELINE_FILE', 'rb')); data=dill.load(open('$DATA_FILE', 'rb')); pl.eval(data)"
                 '''
 
     return script
@@ -151,8 +158,8 @@ def validate_data(pdata,
     non_uniques = [plh for plh in set(pl_hashes) if pl_hashes.count(plh) > 1]
     names = [plh[2] for plh in pl_hashes]
     non_unique_n = [n for n in set(names) if names.count(n) > 1]
-    assert non_uniques == [], "Pipelines in list have to be unique -> copy and"\
-        f" change the names for: {non_uniques}"
+    assert non_uniques == [], "Pipelines in list have to be unique -> copy "\
+        f" and change the names for: {non_uniques}"
     assert non_unique_n == [], "Pipeline names have to be unique -> copy and"\
         f" change names for: {non_unique_n}"
 
@@ -227,6 +234,9 @@ def pack_pipelines_and_data_to_pickle(pdata):
     data = pdata.get_by_name('data').data
     udata = list(set(data))
 
+    # make sure local temp exists
+    conf['local_pickle_tmp'].mkdir(exist_ok=True, parents=True)
+
     # Use the hash for identification
     pipeline_files = []
     data_files = []
@@ -273,7 +283,8 @@ def transfer_pickles_local_to_nemo(ssh_client, conf, file_dict):
                      str(conf['singularity_container_dir']))
             .replace('<__main__>',
                      str(conf['__main__'].stem))
-            .replace('<WS_DIR>', str(conf['workspace_dir']))
+            .replace('<WS_DIR>', str(conf['data_root_nemo']))
+            .replace('<WS_DIR_LOCAL>', str(conf['data_root_local']))
         )
     )
 

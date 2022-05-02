@@ -12,7 +12,6 @@ import numpy as np
 from tqdm import tqdm
 
 from xileh.core.pipelinedata import xPData as PData
-from xileh.core.features import create_features
 from xileh.utils.logger import PlainLogger
 
 
@@ -23,7 +22,7 @@ class xPipeline(object):
     by scipy's pipeline
     """
 
-    def __init__(self, name, verbose=False, log_eval=bool):
+    def __init__(self, name, verbose=False, log_eval=False):
         """ Setup with just populating the name for now
 
         Parameters
@@ -146,6 +145,14 @@ class xPipeline(object):
 
         return step, idx
 
+    @property
+    def steps(self):
+        return self._steps
+
+    @steps.setter
+    def steps(self, steps):
+        self._steps = steps
+
     def replace_step(self, name, step_foo):
         """ Replace a function given its name
 
@@ -189,7 +196,7 @@ class xPipeline(object):
             self._logger.info(f"Evaluating pipeline <{self.__hash__()}> with"
                               f" data <{pdata.__hash__()}>")
 
-        steps_iterator = tqdm(self._steps)
+        steps_iterator = tqdm(self._steps, position=0, leave=True)
         for i, step in enumerate(steps_iterator):
             steps_iterator.set_description(f"Processing step: {step[0]}")
 
@@ -217,6 +224,10 @@ if __name__ == "__main__":
         meta={'mean': 5},
         name='testing_container'
     )
+
+    def create_features(pdata):
+        # do something
+        return pdata
 
     xpl = xPipeline('testp', verbose=True)
     xpl.add_step(('c22 extract', create_features, {'algo': 'c22'}))

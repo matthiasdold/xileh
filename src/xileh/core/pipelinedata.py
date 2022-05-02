@@ -8,6 +8,7 @@
 
 # from methodtools import lru_cache
 
+
 import warnings
 import numpy as np
 
@@ -72,7 +73,9 @@ class xPData(object):
         else:
             nheader = header.copy()
 
-        # init the properties
+
+        # init the properties, these are the 'protected' attrs, which will
+        # be retrieved/set via custom getters and setters on e.g. self.data
         self._data = None
         self._header = {}
         self._meta = {}
@@ -107,6 +110,27 @@ class xPData(object):
         s += pretty_print_get_containers(self.get_containers())
         return s
 
+    def __setattr__(self, name, value):
+        """
+        Two possibilities, set another xPData -> register all subcontainers
+        or simply overwrite object
+        """
+        # Assign a container -> overwrite
+        if isinstance(value, xPData) and name in self.get_container_names():
+            trg_c = self[name]
+            trg_c.overwrite(value)
+
+            # make sure the old name is preserved, as a renaming with the
+            # assignment itself would be a bit counter intuitive
+            trg_c.name = name
+
+        else:
+            # TODO: consider creating new containers via attr setter, i.e.
+            # mycont.newcontname = somevalue --> should map to
+            # trg = mycont.get_by_name('newcontname'); trg.data = somevalue
+
+            super().__setattr__(name, value)
+
     def _validate_input(self, data, header, meta, name):
         """ Some DQ checks"""
 
@@ -129,8 +153,15 @@ class xPData(object):
         # Use a list checking on names if more containers will be appended
 
         if isinstance(val, list):
-            val = CheckedList(val, self)
-        self._data = val
+            # start with empty list and append one by one, so that all are
+            # registered as attributes
+            aux = CheckedList([], self)
+            for e in val:
+                aux.append(e)
+
+            self._data = aux
+        else:
+            self._data = val
 
     @property
     def header(self):
@@ -249,10 +280,11 @@ class xPData(object):
                 if data is not None:
                     break                                     # early stopping
 
-            # full iteration nothing found and last check
+            # full iteration nothing found and last check --> here we create
             if data is None and create_if_missing:
                 data = xPData(None, name=name)
                 self.data.append(data)
+
         else:
             if create_if_missing:
                 raise ValueError(
@@ -323,10 +355,13 @@ class xPData(object):
 
         parent = self.get_by_name(name, find_parent=True)
 
-        if isinstance(parent.data, list):
-            parent.data = [c for c in parent.data if c != trg_c]
-        elif parent.data == trg_c:
+        if parent.data == trg_c:
             parent.data = []
+        elif isinstance(parent.data, list):
+            # bypass the setter here -> else conflict for resetting
+            parent._data = [c for c in parent.data
+                            if isinstance(c, xPData)         # note only containers can be deleted by this approach, no need to check anything else      # noqa
+                            and c != trg_c]
         else:
             raise ValueError(f"Parent of target with {name=} has an unknown"
                              " data structure - should either include just"
@@ -335,6 +370,10 @@ class xPData(object):
         # clear cache to avoid retrieving old data from cache
         # Removed caching on get_by_name -> see above
         # self.get_by_name.cache_clear()
+
+        # attr cleanup
+        delattr(parent, name)
+
 
     def _to_dict(self):
         """ Transform the container to a dictionary -> for later use of
@@ -387,6 +426,10 @@ class xPData(object):
         src.header['name'] = to_name
 
 
+class ContainerNameNotUniqueError(KeyError):
+    pass
+
+
 class CheckedList(list):
 
     """ A helper list class for which the append method will be linked
@@ -411,11 +454,16 @@ class CheckedList(list):
             the object to append
 
         """
-        if (isinstance(elm, xPData)
-                and elm.header['name'] in self.xpdata.get_container_names()):
-            raise KeyError(f"Data container '{self.xpdata}' already containes "
-                           f"a container with name '{elm.header['name']}', "
-                           "names need to be unique.")
+
+        if isinstance(elm, xPData):
+            if elm.header['name'] in self.xpdata.get_container_names():
+                raise ContainerNameNotUniqueError(
+                    f"Data container '{self.xpdata.name}' already containes "
+                    f"a container with name '{elm.name}', "
+                    "names need to be unique.")
+
+            # also register an attribute
+            setattr(self.xpdata, elm.name, elm)
 
         super(CheckedList, self).append(elm)
 
@@ -445,7 +493,8 @@ def from_dict(d):
         type_key = 'datatype'
 
     assert d[type_key] == 'xPData', "Dictionary needs to represent a xPData"\
-        " object which needs a datatype=='xPData' key:value pair"
+        " object which needs a datatype=='xPData' key:value pair - received"\
+        f" {d}"
     names = [k for k in d.keys() if k != type_key]
 
     assert len(names) == 1, "Unknown structure for casting dict to xPData"\
@@ -475,6 +524,11 @@ def from_dict(d):
             if (isinstance(elm, dict) and type_key in elm.keys()
                     and elm[type_key] == 'xPData'):
                 elms['data'][i] = from_dict(elm)
+
+    # add an empty meta if missing --> load from toml instead yaml would cause
+    # this
+    if 'meta' not in elms.keys():
+        elms['meta'] = {}
 
     return xPData(elms['data'],
                   header=elms['header'],
@@ -530,7 +584,7 @@ if __name__ == "__main__":
         xPData(
             [xPData('a', header={'name': 'deepest'}),
              xPData(1241, header={'name': 'deepest2'}),
-             xPData({'a': 'b'}, header={'name': 'deepest'}),
+             xPData({'a': 'b'}, header={'name': 'deepest3'}),
              ],
             header={'name': 'nesting'})
     )
