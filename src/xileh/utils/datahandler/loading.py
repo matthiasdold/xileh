@@ -6,7 +6,6 @@
 #
 # The loading functionality
 
-import mne
 
 import tomli
 import yaml
@@ -33,59 +32,12 @@ def load_numpy(fname):
     return numpy.load(fname)
 
 
-def mne_load_raw(fname):
-    return mne.io.read_raw(fname)
-
-
-def mne_load_ica(fname):
-    return mne.preprocessing.read_ica(fname)
-
-
-def mne_load_epo(fname):
-    return mne.read_epochs(fname)
-
-
-def mne_transform_named_int(ni_str):
-    intval, name = ni_str.split(' ')
-    return mne.utils._bunch.NamedInt(name.replace('(', '').replace(')', ''),
-                                     intval)
-
-
 loaders_dict = {
     pandas.DataFrame: load_pandas,
     pandas.Series: load_pandas,
     numpy.ndarray: load_numpy,
     pathlib.Path: pathlib.Path,
-    mne.io.BaseRaw: mne_load_raw,
-    mne.io.RawArray: mne_load_raw,
-    mne.preprocessing.ICA: mne_load_ica,
-    mne.BaseEpochs: mne_load_epo,
-    mne.utils._bunch.NamedInt: mne_transform_named_int
 }
-
-mne_type_lookup = {
-    'mne.epochs.Epochs': mne_load_epo,
-    'mne.io.fiff.raw.Raw': mne_load_raw
-}
-
-
-def get_loader(datatype):
-
-    tp = datatype.split(' ')[1].replace('>', '').replace("'", "")
-
-    # --> just why?
-    # In [46]: isinstance(mne.io.fiff.raw.Raw, mne.io.fiff.raw.Raw)
-    # Out[46]: False
-    if tp in mne_type_lookup.keys():
-        return mne_type_lookup[tp]
-
-    try:
-        try:
-            return loaders_dict[eval(tp)]
-        except KeyError:
-            raise NotImplementedError(f"No loader implemented for {datatype=}")
-    except Exception as e:
-        print(e)
 
 
 def get_loader(datatype):

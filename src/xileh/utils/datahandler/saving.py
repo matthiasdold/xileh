@@ -9,15 +9,12 @@
 
 import shutil
 import toml
-import orjson
 
 from pathlib import Path
 from functools import wraps
 
 import pandas as pd
 import numpy as np
-
-import mne
 
 
 def prepare_save(func):
@@ -94,43 +91,8 @@ def numpy_saver(data, fname=Path()):
 
 
 @prepare_save
-def mne_save_raw(data, fname=Path()):
-    fname = fname.parent.joinpath(fname.stem + 'raw.fif')
-    data.save(fname)
-    return {'extra_fname': str(fname), 'type': str(type(data))}
-
-
-@prepare_save
-def mne_save_epo(data, fname=Path()):
-    fname = fname.parent.joinpath(fname.stem + 'epo.fif')
-    data.save(fname)
-    return {'extra_fname': str(fname), 'type': str(type(data))}
-
-
-@prepare_save
-def mne_save_ica(data, fname=Path()):
-    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
-    data.save(fname)
-    return {'extra_fname': str(fname), 'type': str(type(data))}
-
-
-@prepare_save
 def transform_paths(data, fname=Path()):
     """ Cast paths to string """
-    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
-    return {'transformed_data': str(data), 'type': str(type(data))}
-
-
-@prepare_save
-def transform_named_int(data, fname=Path()):
-    """ Cast paths to string for saving in yaml """
-    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
-    return {'transformed_data': str(data), 'type': str(type(data))}
-
-
-@prepare_save
-def transform_named_int(data, fname=Path()):
-    """ Cast paths to string for saving in yaml """
     fname = fname.parent.joinpath(fname.stem + 'ica.fif')
     return {'transformed_data': str(data), 'type': str(type(data))}
 
@@ -140,12 +102,7 @@ non_serializeable_types = {
     pd.core.frame.DataFrame: pandas_saver,
     pd.core.series.Series: pandas_saver,
     np.ndarray: numpy_saver,
-    mne.BaseEpochs: mne_save_epo,
-    mne.io.BaseRaw: mne_save_raw,
-    mne.io.RawArray: mne_save_raw,
-    mne.preprocessing.ICA: mne_save_ica,
     Path: transform_paths,
-    mne.utils._bunch.NamedInt: transform_named_int,         # why mne, just why...
 }
 
 
@@ -155,7 +112,6 @@ def get_saver(data):
     # as this avoids needing to include every subclass since check is done
     # via isinstance
 
-    # This works for the mne types:
     for k, v in non_serializeable_types.items():
         if isinstance(data, k):
             return v
