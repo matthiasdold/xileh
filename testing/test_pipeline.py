@@ -4,8 +4,14 @@ import numpy as np
 
 from xileh.core.pipeline import xPipeline
 from xileh.core.pipelinedata import xPData
-from xileh.core.features import create_features
 from xileh.utils.logger import PlainLogger
+
+
+def create_features(pdata, algo='C22'):
+    meta = {f'catch22__{i}': 1 for i in range(1, 24)}
+    pdata['TestData'].meta = meta
+
+    return pdata
 
 
 @pytest.fixture

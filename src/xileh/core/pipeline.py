@@ -226,13 +226,10 @@ if __name__ == "__main__":
     )
 
     def create_features(pdata):
-        # do something
+        print("Doing something")
         return pdata
 
     xpl = xPipeline('testp', verbose=True)
-    xpl.add_step(('c22 extract', create_features, {'algo': 'c22'}))
-    xpl.add_step(('c22 extract2', create_features))
-    xpl.add_step(('c22 extract3', create_features, {'algo': 'c22'}))
 
     xpl.add_steps(
         ('test1', create_features, {}),
