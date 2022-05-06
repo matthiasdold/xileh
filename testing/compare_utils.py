@@ -1,3 +1,4 @@
+import pdb
 from unittest import TestCase
 from pathlib import Path
 
@@ -7,12 +8,8 @@ import pandas as pd
 
 from datetime import datetime
 
-from xileh.utils.datahandler.type_utils.named_tuples import (
-    isinstance_namedtuple)
-
 
 class NotEqual(Exception):
-    # TODO: is this needed, if so should it be somewhere else?
     pass
 
 
@@ -37,12 +34,17 @@ def _compare_container(obj_1, obj_2, key=""):
         # after here we know the objs are of same type
         # handle bug involving importlib.util type mismatch
 
-        # make an exception for Epochs vs EpochsArray... for all we use
-        # them, they can be considered equivalent
-        if (isinstance(obj_1, mne.BaseEpochs)
-                and isinstance(obj_2, mne.BaseEpochs)):
+        # make an exception for Epochs vs EpochsArray and BaseRaw
+        # for all we use them, they can be considered equivalent
+        if ((isinstance(obj_1, mne.BaseEpochs)
+                and isinstance(obj_2, mne.BaseEpochs))
+            or (isinstance(obj_1, mne.io.BaseRaw)
+                and isinstance(obj_2, mne.io.BaseRaw)
+                )):
+
             assert np.allclose(obj_1.get_data(), obj_2.get_data()), "Data of "\
-                f"epochs original {obj_1=} and loaded {obj_2=} does not agree"
+                f"epochs or raw original {obj_1=} and loaded {obj_2=} does"\
+                " not agree"
         else:
             if str(type(obj_1)) != str(type(obj_2)):
                 raise NotEqual(
