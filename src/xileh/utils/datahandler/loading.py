@@ -17,6 +17,8 @@ import pathlib
 import pandas
 import numpy
 
+import mne
+
 from warnings import warn
 
 # =============================================================================
@@ -32,17 +34,41 @@ def load_numpy(fname):
     return numpy.load(fname)
 
 
+def mne_load_raw(fname):
+    return mne.io.read_raw(fname)
+
+
+def mne_load_ica(fname):
+    return mne.preprocessing.read_ica(fname)
+
+
+def mne_load_epo(fname):
+    return mne.read_epochs(fname)
+
+
+def mne_transform_named_int(ni_str):
+    intval, name = ni_str.split(' ')
+    return mne.utils._bunch.NamedInt(name.replace('(', '').replace(')', ''),
+                                     intval)
+
+
 loaders_dict = {
     pandas.DataFrame: load_pandas,
     pandas.Series: load_pandas,
     numpy.ndarray: load_numpy,
     pathlib.Path: pathlib.Path,
+    mne.io.BaseRaw: mne_load_raw,
+    mne.io.RawArray: mne_load_raw,
+    mne.preprocessing.ICA: mne_load_ica,
+    mne.BaseEpochs: mne_load_epo,
+    mne.utils._bunch.NamedInt: mne_transform_named_int
 }
 
 
 def get_loader(datatype):
 
     tp = datatype.split(' ')[1].replace('>', '').replace("'", "")
+
     # check for an appropriate ancestor
     loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
 

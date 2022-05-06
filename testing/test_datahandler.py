@@ -34,6 +34,3 @@ def test_get_loader():
     assert get_loader("<type pandas.DataFrame>") == load_pandas
     assert get_loader("<type pandas.Series>") == load_pandas
     assert get_loader("<type numpy.ndarray>") == load_numpy
-
-
-
