@@ -311,6 +311,23 @@ def test_attribute_removal(get_nested_test_data):
         td.string_nest_c.somename2
 
 
+def test_delete_from_main_list_and_add_new(get_nested_test_data):
+    """
+    This test ensures that the attribute creation workes properly even if
+    containers data has been modified by deletion. There was a bug when
+    deletion did not create a CheckedList and hence adding new data as
+    attributes did not work
+    """
+    td = get_nested_test_data
+
+    td.delete_by_name('1st_level_child')
+
+    new = td.get_by_name('new_c', create_if_missing=True)
+
+    # This will throw an error if new_c was not created as an attribute
+    td.__getattribute__('new_c')
+
+
 
 
 

@@ -73,7 +73,6 @@ class xPData(object):
         else:
             nheader = header.copy()
 
-
         # init the properties, these are the 'protected' attrs, which will
         # be retrieved/set via custom getters and setters on e.g. self.data
         self._data = None
@@ -358,10 +357,11 @@ class xPData(object):
         if parent.data == trg_c:
             parent.data = []
         elif isinstance(parent.data, list):
-            # bypass the setter here -> else conflict for resetting
-            parent._data = [c for c in parent.data
-                            if isinstance(c, xPData)         # note only containers can be deleted by this approach, no need to check anything else      # noqa
-                            and c != trg_c]
+            # bypass the setter by using _data here -> else conflict for resetting                                                                       # noqa
+            parent._data = CheckedList(
+                [c for c in parent.data
+                 if isinstance(c, xPData)         # note only containers can be deleted by this approach, no need to check anything else      # noqa
+                 and c != trg_c], parent)
         else:
             raise ValueError(f"Parent of target with {name=} has an unknown"
                              " data structure - should either include just"
@@ -373,7 +373,6 @@ class xPData(object):
 
         # attr cleanup
         delattr(parent, name)
-
 
     def _to_dict(self):
         """ Transform the container to a dictionary -> for later use of
@@ -588,6 +587,18 @@ if __name__ == "__main__":
              ],
             header={'name': 'nesting'})
     )
+
+    for i in range(5):
+        n = tdata.get_by_name(f'test_{i}', create_if_missing=True)
+        n.data = '12314'
+
+    tdata.delete_by_name('nesting')
+
+    for i in range(5, 10):
+        n = tdata.get_by_name(f'test_{i}', create_if_missing=True)
+        n.data = '12314'
+
+    tdata.__dict__
 
     tdata.data.append(
         xPData('124', name='notsodeep'),
