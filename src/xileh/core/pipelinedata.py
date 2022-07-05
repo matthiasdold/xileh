@@ -12,7 +12,7 @@
 import warnings
 import numpy as np
 
-from xileh.utils.datahandler.saving import save_to_file
+from xileh.utils.datahandler.saving import save_to_folder
 from xileh.utils.datahandler.loading import load_container
 
 
@@ -408,7 +408,7 @@ class xPData(object):
             folder path and name to store the data to
         """
 
-        save_to_file(self._to_dict(), fname=fname)
+        save_to_folder(self._to_dict(), fname=fname)
 
     def rename(self, from_name, to_name):
         """ Changes a containers name

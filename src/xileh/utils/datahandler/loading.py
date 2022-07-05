@@ -19,6 +19,7 @@ import numpy
 
 import mne
 
+from pathlib import Path
 from warnings import warn
 
 # =============================================================================
@@ -88,35 +89,35 @@ def get_loader(datatype):
 # =============================================================================
 
 
-def load_extra_data_in_dict(d):
+def load_extra_data_in_dict(d: dict, froot: Path) -> dict:
     """ Go over all key val pairs an load of extra data is present """
     # if in lowest layer of extra data
     if d.keys() == {'extra_fname', 'type'}:
         # if in lowest layer
-        return get_loader(d['type'])(d['extra_fname'])
-    elif d.keys() == {'transformed_data', 'type'}:
-        return get_loader(d['type'])(d['transformed_data'])
+        pth = d['extra_fname']
 
-    # if in lowest layer of extra data
-    if d.keys() == {'extra_fname', 'type'}:
-        # if in lowest layer
-        return get_loader(d['type'])(d['extra_fname'])
+        # pdb.set_trace()
+        if Path(pth).exists():        # an absolute path was saved (legacy)
+            return get_loader(d['type'])(pth)
+        else:
+            return get_loader(d['type'])(froot.joinpath(pth))
+
     elif d.keys() == {'transformed_data', 'type'}:
         return get_loader(d['type'])(d['transformed_data'])
 
     # else check how to iterate further
     for k, v in d.items():
         if isinstance(v, dict):
-            d[k] = load_extra_data_in_dict(v)
+            d[k] = load_extra_data_in_dict(v, froot=froot)
         elif isinstance(v, (tuple, list)):
-            d[k] = load_extra_data_in_iterable(v)
+            d[k] = load_extra_data_in_iterable(v, froot=froot)
         else:
             d[k] = v
 
     return d
 
 
-def load_extra_data_in_iterable(iter):
+def load_extra_data_in_iterable(iter, froot: Path):
     """
     Load all extra data entities which might be in an iterable
     """
@@ -125,9 +126,9 @@ def load_extra_data_in_iterable(iter):
     if isinstance(iter, set):
         return iter
     else:
-        ret = [load_extra_data(v)
+        ret = [load_extra_data(v, froot=froot)
                if not isinstance(v, (tuple, list))
-               else load_extra_data_in_iterable(v)
+               else load_extra_data_in_iterable(v, froot=froot)
                for v in iter]
 
         if isinstance(iter, tuple):
@@ -135,12 +136,12 @@ def load_extra_data_in_iterable(iter):
         return ret
 
 
-def load_extra_data(v):
+def load_extra_data(v, froot: Path):
     """
     Analog to the saving calls, but here the final load happens in _in_dict
     """
     if isinstance(v, dict):
-        return load_extra_data_in_dict(v)
+        return load_extra_data_in_dict(v, froot=froot)
     else:
         return v
 
@@ -148,7 +149,7 @@ def load_extra_data(v):
 def load_container(fname, serializeable_only=False):
     """ Load the container at the path = fname """
 
-    fname = pathlib.Path(fname).resolve()
+    fname = Path(fname).resolve()
 
     # check for a container.toml or container.yaml
     try:
@@ -159,6 +160,10 @@ def load_container(fname, serializeable_only=False):
 
     # do also load the data stored in extras
     if not serializeable_only:
-        d = load_extra_data_in_dict(d)
+        d = load_extra_data_in_dict(d, froot=fname)
 
     return d
+
+
+if __name__ == '__main__':
+    d = load_container('test_container')
