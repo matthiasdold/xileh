@@ -124,7 +124,7 @@ def get_saver(data):
 # =============================================================================
 
 
-def save_to_file(data: dict, fname: str = '', overwrite: bool = False):
+def save_to_folder(data: dict, fname: str = '', overwrite: bool = False):
     """ Save data in the dictionary to a given folder """
     # --> if there would be an overwrite and it is not specified, ask
     save = True
@@ -208,7 +208,17 @@ def save_non_serializables_in_iterable(iter, fname):
 
 def save_non_serializable(v, fname):
     if isinstance(v, tuple(non_serializeable_types.keys())):
-        return get_saver(v)(v, fname=fname)
+        meta = get_saver(v)(v, fname=fname)
+
+        # make path local
+        if 'extra_fname' in meta.keys():
+            pth = Path(meta['extra_fname'])
+            meta['extra_fname'] = str(
+                Path('.').joinpath(pth.parent.stem, pth.stem + pth.suffix)
+            )
+
+        return meta
+
     elif isinstance(v, dict):
         return save_dict_with_non_serializables(v, fname)
 
@@ -224,6 +234,8 @@ if __name__ == '__main__':
                    name='test_container')
 
     data = pdata._to_dict()
+
+    save_to_folder(data, fname='test_container')
 
 
 
