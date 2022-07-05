@@ -4,6 +4,7 @@
 # author: Matthias Dold
 # date: 2021-03-26
 
+import pdb
 import pytest
 import tempfile
 import numpy as np
@@ -15,6 +16,7 @@ from xileh.core.pipelinedata import CheckedList
 from xileh.core.pipelinedata import from_dict
 
 from testing.compare_utils import _compare_container
+from copy import deepcopy
 
 
 @pytest.fixture
@@ -38,11 +40,11 @@ def get_nested_test_data():
                     xPData(data=[1, 23, 4],
                            header={'name': 'somename'})
                 ],
-                header={'name': '1st_level_child'},
+                header={'name': 'first_level_child'},
             ),
             xPData(
                 data=[
-                    xPData(data=np.eye(3), header={'name': 'test2'}),
+                    xPData(data=np.eye(4), header={'name': 'test2'}),
                     xPData(data=[1, 23, 4],
                            header={'name': 'somename2'})
                 ],
@@ -55,8 +57,8 @@ def get_nested_test_data():
             ),
             xPData(data=np.zeros(5), header={'name': 'not the target'})
         ],
-        header={'name': 'outer_container',
-                'description': 'A parent container without name'},
+        name='outer_container',
+        header={'description': 'A parent container without name'},
         meta={'some_meta': [1, 2, 3]}
     )
     return tdata
@@ -106,7 +108,7 @@ def test_get_by_name(get_nested_test_data):
     assert 'new' in td.get_container_names()
 
     assert td.get_by_name('somename',
-                          find_parent=True).name == '1st_level_child'
+                          find_parent=True).name == 'first_level_child'
 
     td.get_by_name('new')   # -> will cache the result
     td.delete_by_name('new')
@@ -200,7 +202,7 @@ def test__to_dict(get_nested_test_data):
 
     # deepest level children
     assert (list(dtd[td.name]['data'][0].values())[0]['data'][0]
-            == td.get_by_name('1st_level_child').data[0]._to_dict())
+            == td.get_by_name('first_level_child').data[0]._to_dict())
 
 
 def test_from_dict(get_nested_test_data):
@@ -265,10 +267,11 @@ def test_save_and_load(get_nested_test_data):
 def test_rename(get_nested_test_data):
 
     # rename a nested
-    get_nested_test_data.rename('test', 'test2')
+    orig_data = get_nested_test_data.first_level_child.test.data.copy()
+    get_nested_test_data.rename('test', 'test22')
 
     assert ('test' not in get_nested_test_data.get_container_names()
-            and 'test2' in get_nested_test_data.get_container_names()), \
+            and 'test22' in get_nested_test_data.get_container_names()), \
         "Renaming failed"
 
     # Outer container
@@ -277,6 +280,11 @@ def test_rename(get_nested_test_data):
     assert ('outer_container' not in get_nested_test_data.get_container_names()
             and 'new_outer' in get_nested_test_data.get_container_names()), \
         "Renaming failed"
+
+    # attribute acces
+    assert (get_nested_test_data.first_level_child.test22.data
+            == orig_data).all(),\
+        "Attribute access failed after renaming"
 
 
 def test_get_and_set_by_attribute(get_nested_test_data):
@@ -320,7 +328,7 @@ def test_delete_from_main_list_and_add_new(get_nested_test_data):
     """
     td = get_nested_test_data
 
-    td.delete_by_name('1st_level_child')
+    td.delete_by_name('first_level_child')
 
     new = td.get_by_name('new_c', create_if_missing=True)
 

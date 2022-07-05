@@ -13,7 +13,9 @@ import warnings
 import numpy as np
 
 from xileh.utils.datahandler.saving import save_to_folder
-from xileh.utils.datahandler.loading import load_container
+
+# rename so that is is not accidentally loaded
+from xileh.utils.datahandler.loading import load_container as _load_container
 
 
 class xPData(object):
@@ -115,7 +117,9 @@ class xPData(object):
         or simply overwrite object
         """
         # Assign a container -> overwrite
-        if isinstance(value, xPData) and name in self.get_container_names():
+        if (isinstance(value, xPData)
+                and name in self.get_container_names()
+                ):
             trg_c = self[name]
             trg_c.overwrite(value)
 
@@ -123,12 +127,13 @@ class xPData(object):
             # assignment itself would be a bit counter intuitive
             trg_c.name = name
 
-        else:
-            # TODO: consider creating new containers via attr setter, i.e.
-            # mycont.newcontname = somevalue --> should map to
-            # trg = mycont.get_by_name('newcontname'); trg.data = somevalue
 
-            super().__setattr__(name, value)
+        # Always set the attr
+        # TODO: consider creating new containers via attr setter, i.e.
+        # mycont.newcontname = somevalue --> should map to
+        # trg = mycont.get_by_name('newcontname'); trg.data = somevalue
+
+        super().__setattr__(name, value)
 
     def _validate_input(self, data, header, meta, name):
         """ Some DQ checks"""
@@ -424,6 +429,12 @@ class xPData(object):
         src = self.get_by_name(from_name)
         src.header['name'] = to_name
 
+        # also clean the attributes if renaming was not on the outer most container         # noqa
+        parent = self.get_by_name(to_name, find_parent=True)
+        if parent is not None:
+            setattr(parent, to_name, src)
+            delattr(parent, from_name)
+
 
 class ContainerNameNotUniqueError(KeyError):
     pass
@@ -547,7 +558,7 @@ def from_container(cpath):
     pdata : xPData
         a pipelinedata container loaded from cpath
     """
-    pdata = from_dict(load_container(cpath))
+    pdata = from_dict(_load_container(cpath))
 
     return pdata
 
