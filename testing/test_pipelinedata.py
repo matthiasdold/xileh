@@ -336,8 +336,9 @@ def test_delete_from_main_list_and_add_new(get_nested_test_data):
     td.__getattribute__('new_c')
 
 
+def test_deepcopy(get_nested_test_data):
+    d1 = get_nested_test_data
+    d2 = d1.copy()
 
-
-
-
+    _compare_container(d1._to_dict(), d2._to_dict())
 

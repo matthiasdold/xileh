@@ -8,7 +8,6 @@
 
 # from methodtools import lru_cache
 
-
 import warnings
 import numpy as np
 
@@ -16,6 +15,8 @@ from xileh.utils.datahandler.saving import save_to_folder
 
 # rename so that is is not accidentally loaded
 from xileh.utils.datahandler.loading import load_container as _load_container
+
+from copy import deepcopy
 
 
 class xPData(object):
@@ -91,6 +92,15 @@ class xPData(object):
         return self.get_by_name(name)
 
     def __setitem__(self, name, value):
+
+        if name in ['header', 'meta']:
+            print(f">>> You are trying to set an item with name={name}, "
+                  "this will most likely fail in the next step as the "
+                  "object cannot distinguish between a container with that "
+                  "name or the property. If you mean to set a header of meta,"
+                  " try using the attribute notation."
+                  )
+
         assert isinstance(value, xPData), "You can only assign xPData"\
             " containers to a xPData container"
 
@@ -117,16 +127,13 @@ class xPData(object):
         or simply overwrite object
         """
         # Assign a container -> overwrite
-        if (isinstance(value, xPData)
-                and name in self.get_container_names()
-                ):
+        if (isinstance(value, xPData) and name in self.get_container_names()):
             trg_c = self[name]
             trg_c.overwrite(value)
 
             # make sure the old name is preserved, as a renaming with the
             # assignment itself would be a bit counter intuitive
             trg_c.name = name
-
 
         # Always set the attr
         # TODO: consider creating new containers via attr setter, i.e.
@@ -435,6 +442,27 @@ class xPData(object):
             setattr(parent, to_name, src)
             delattr(parent, from_name)
 
+    def copy(self):
+        """
+        Create a copy of the container and return it. This method is
+        convenience and helps to avoid issues which deepcopy encounters for
+        copying nested structures
+        """
+        ndata = xPData(data=None, name=self.name)
+        # potentially child containers
+
+        if isinstance(self.data, list):
+            ndata.data = [v.copy() if isinstance(v, xPData) else deepcopy(v)
+                          for v in self.data]
+        else:
+            ndata.data = self.data
+
+        # copy the dictionaries
+        ndata.header = self.header.copy()
+        ndata.meta = self.meta.copy()
+
+        return ndata
+
 
 class ContainerNameNotUniqueError(KeyError):
     pass
@@ -465,7 +493,8 @@ class CheckedList(list):
 
         """
 
-        if isinstance(elm, xPData):
+        if isinstance(elm, xPData) and elm.__dict__ != {}:
+
             if elm.header['name'] in self.xpdata.get_container_names():
                 raise ContainerNameNotUniqueError(
                     f"Data container '{self.xpdata.name}' already containes "
@@ -623,6 +652,7 @@ if __name__ == "__main__":
         data=[xPData(i, name=f"some_name_{i}") for i in range(10)],
         header={'name': 'testdata', 'description': 'Some data description'},
         meta={'mean_data[0]': 5}
+
     )
 
     chk_list = CheckedList([], tdata)
