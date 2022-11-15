@@ -59,8 +59,7 @@ def save_serializable(data, fname=Path()):
     # as yaml fails if e.g. a numpy.float64 float is presented
 
     toml.dump(data, open(fname.joinpath('container.toml'), 'w'),
-              encoder=toml.TomlNumpyEncoder()
-              )
+              encoder=toml.TomlNumpyEncoder())
     # option = (
     #     orjson.OPT_SERIALIZE_NUMPY |            # should be able to work with numpy.float etc.      # noqa
     #     orjson.OPT_NAIVE_UTC |
@@ -271,6 +270,3 @@ if __name__ == '__main__':
     data = pdata._to_dict()
 
     save_to_folder(data, fname='test_container')
-
-
-

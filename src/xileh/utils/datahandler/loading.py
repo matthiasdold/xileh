@@ -7,7 +7,7 @@
 # The loading functionality
 
 
-import tomli
+import tomllib
 import yaml
 # import orjson
 
@@ -153,7 +153,7 @@ def load_container(fname, serializeable_only=False):
 
     # check for a container.toml or container.yaml
     try:
-        d = tomli.load(open(fname.joinpath('container.toml'), 'rb'))
+        d = tomllib.load(open(fname.joinpath('container.toml'), 'rb'))
         # d = orjson.loads(open(fname.joinpath('container.toml'), 'rb').read())
     except FileNotFoundError:
         d = yaml.safe_load(open(fname.joinpath('container.yaml'), 'r'))
