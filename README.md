@@ -328,6 +328,15 @@ Steps:
         ->
 ```
 
+#### Early Stopping
+Stopping an evaluation early can be achieved by setting `early_stop` parameter
+within the `pdata.header`. This would be done in any pipeline function
+which you would want to trigger an early stop (e.g. you load data and nothing
+is found -> skip all processing).
+
+```python
+pdata.header['early_stop'] = True
+```
 
 ## Working with xileh
 A general example of how a script could be structured is provided in this template

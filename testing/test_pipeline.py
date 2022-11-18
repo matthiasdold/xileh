@@ -133,3 +133,33 @@ def test_set_step_kwargs(sample_pipeline_filled):
 
     for k, v in kwargs.items():
         assert step[2][k] == v
+
+
+def test_early_stop():
+    """ An early stop would be signaled within the header of the xPData """
+    pdata = xPData([], name='testing_data')
+    pdata2 = xPData([], name='testing_data')
+
+    def add_data(pdata: xPData, nbr: str = "1", add_stop: bool = False):
+        pdata.add(nbr, name=nbr)
+
+        if add_stop:
+            pdata.header['early_stop'] = True
+
+        return pdata
+
+    pl = xPipeline("testpl")
+    pl.add_steps(
+        ("adddata1", add_data, {'nbr': "1"}),
+        ("adddata2", add_data, {'nbr': "2", 'add_stop': True}),
+        ("adddata3", add_data, {'nbr': "3"}),
+    )
+    pl2 = xPipeline("testpl", silent=True)
+    pl2.add_steps(*pl.steps)
+    pl.eval(pdata)
+    pl2.eval(pdata2)
+
+    assert pdata.get_container_names() == ["testing_data", "1", "2"]
+    assert pdata2.get_container_names() == ["testing_data", "1", "2"]
+    assert pdata.get_container_names() == ["testing_data", "1", "2"]
+

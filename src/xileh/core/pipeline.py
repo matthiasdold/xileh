@@ -11,7 +11,7 @@ import numpy as np
 
 from tqdm import tqdm
 
-from xileh.core.pipelinedata import xPData as PData
+from xileh.core.pipelinedata import xPData
 from xileh.utils.logger import PlainLogger
 
 
@@ -22,16 +22,20 @@ class xPipeline(object):
     by scipy's pipeline
     """
 
-    def __init__(self, name, verbose=False, log_eval=False):
+    def __init__(self, name: str, verbose: bool = False, silent: bool = False,
+                 log_eval: bool = False):
         """ Setup with just populating the name for now
 
         Parameters
         ----------
         name : str
             name of the pipeline
-        verbose : bool
+        verbose : bool (False)
             whether or not to print step on .eval()
-        log_eval : bool
+        silent : bool (False)
+            if silent, do not print a progress bar. This is used if timing
+            is critical
+        log_eval : bool (False)
             whether or not to log the evaluation
         """
         self._name = name
@@ -39,6 +43,7 @@ class xPipeline(object):
         self.verbose = verbose
         self._logger = PlainLogger(name + ".log")
         self._log_eval = log_eval
+        self._silent = silent
 
     def __repr__(self):
         """ Show name of repl call """
@@ -56,7 +61,7 @@ class xPipeline(object):
         ----------
         step_foo : tuple (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a PData object and (optional) kwargs for this function
+            a xPData object and (optional) kwargs for this function
 
         Returns
         -------
@@ -77,7 +82,7 @@ class xPipeline(object):
         ----------
         step_foo : tuple (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a PData object and (optional) kwargs for this function
+            a xPData object and (optional) kwargs for this function
         """
 
         # check that name is not yet used
@@ -94,7 +99,7 @@ class xPipeline(object):
         ----------
         steps : tuples (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a PData object and (optional) kwargs for this function
+            a xPData object and (optional) kwargs for this function
         """
         for step in steps:
             self.add_step(step)
@@ -162,7 +167,7 @@ class xPipeline(object):
             step name i.e first value of the step tuple
         step_foo : tuple (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a PData object and (optional) kwargs for this function
+            a xPData object and (optional) kwargs for this function
 
         """
 
@@ -179,16 +184,16 @@ class xPipeline(object):
         # tuple is unmuteable, but the dictionary at step[2] is muteable
         step[2].update(kwargs)
 
-    def eval(self, pdata):
+    def eval(self, pdata: xPData):
         """ Run all steps in self._steps
         Parameters
         ----------
-        pdata : pipelinedata.PData
-            The PData object to be processed
+        pdata : pipelinedata.xPData
+            The xPData object to be processed
 
         Returns
         -------
-            pdata : PData
+            pdata : xPData
                 Return the pipelined data after running through all steps
 
         """
@@ -196,29 +201,47 @@ class xPipeline(object):
             self._logger.info(f"Evaluating pipeline <{self.__hash__()}> with"
                               f" data <{pdata.__hash__()}>")
 
-        steps_iterator = tqdm(self._steps, position=0, leave=True)
-        for i, step in enumerate(steps_iterator):
-            steps_iterator.set_description(f"Processing step: {step[0]}")
+        if self._silent:
+            for step in self._steps:
 
-            n_of_m = f"{i + 1}/{len(self._steps)}"
-            msg = f"Runnning step {n_of_m}: {step[0]} with kwargs = {step[2]}"
+                # check if early_stop is set and breakout
+                if ('early_stop' in pdata.header.keys()
+                        and pdata.header['early_stop']):
+                    break
 
-            if self.verbose:
-                tqdm.write(msg)
-            if self._log_eval:
-                self._logger.info(msg)
+                foo = step[1]
+                kwargs = step[2]
+                pdata = foo(pdata, **kwargs)
+        else:
+            steps_iterator = tqdm(self._steps, position=0, leave=True)
+            for i, step in enumerate(steps_iterator):
 
-            foo = step[1]
-            kwargs = step[2]
-            pdata = foo(pdata, **kwargs)
+                # check if early_stop is set and breakout
+                if ('early_stop' in pdata.header.keys()
+                        and pdata.header['early_stop']):
+                    break
 
-            if self._log_eval:
-                self._logger.info(f"Finished step {n_of_m}: {step[0]}")
+                steps_iterator.set_description(f"Processing step: {step[0]}")
+
+                n_of_m = f"{i + 1}/{len(self._steps)}"
+                msg = f"Eval step {n_of_m}: {step[0]} with kwargs = {step[2]}"
+
+                if self.verbose:
+                    tqdm.write(msg)
+                if self._log_eval:
+                    self._logger.info(msg)
+
+                foo = step[1]
+                kwargs = step[2]
+                pdata = foo(pdata, **kwargs)
+
+                if self._log_eval:
+                    self._logger.info(f"Finished step {n_of_m}: {step[0]}")
 
 
 if __name__ == "__main__":
 
-    tdata = PData(
+    tdata = xPData(
         data=np.eye(5),
         header={'description': 'Some data description'},
         meta={'mean': 5},
