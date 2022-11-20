@@ -342,6 +342,3 @@ pdata.header['early_stop'] = True
 A general example of how a script could be structured is provided in this template
 #### Template
 
-
-# TODOS
-[ ] move `.nemo_eval()` to a separate branch
