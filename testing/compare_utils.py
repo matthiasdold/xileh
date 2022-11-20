@@ -1,8 +1,6 @@
-import pdb
 from unittest import TestCase
 from pathlib import Path
 
-import mne
 import numpy as np
 import pandas as pd
 
@@ -34,27 +32,15 @@ def _compare_container(obj_1, obj_2, key=""):
         # after here we know the objs are of same type
         # handle bug involving importlib.util type mismatch
 
-        # make an exception for Epochs vs EpochsArray and BaseRaw
-        # for all we use them, they can be considered equivalent
-        if ((isinstance(obj_1, mne.BaseEpochs)
-                and isinstance(obj_2, mne.BaseEpochs))
-            or (isinstance(obj_1, mne.io.BaseRaw)
-                and isinstance(obj_2, mne.io.BaseRaw)
-                )):
-
-            assert np.allclose(obj_1.get_data(), obj_2.get_data()), "Data of "\
-                f"epochs or raw original {obj_1=} and loaded {obj_2=} does"\
-                " not agree"
-        else:
-            if str(type(obj_1)) != str(type(obj_2)):
-                raise NotEqual(
-                    f'Type mismatch {key=}, {type(obj_1)=} & {type(obj_2)=}')
-            try:
-                TestCase().assertCountEqual(obj_1.__dir__(), obj_2.__dir__())
-            except AssertionError as e:
-                raise NotEqual(
-                    f'__dir__ mismatch {key=}, {type(obj_1)=} & {type(obj_2)=}'
-                    f'\n{e}')
+        if str(type(obj_1)) != str(type(obj_2)):
+            raise NotEqual(
+                f'Type mismatch {key=}, {type(obj_1)=} & {type(obj_2)=}')
+        try:
+            TestCase().assertCountEqual(obj_1.__dir__(), obj_2.__dir__())
+        except AssertionError as e:
+            raise NotEqual(
+                f'__dir__ mismatch {key=}, {type(obj_1)=} & {type(obj_2)=}'
+                f'\n{e}')
 
     elif isinstance(obj_1, np.ndarray):
         if np.isnan(obj_1).all() and np.isnan(obj_2).all():
@@ -108,17 +94,6 @@ def _compare_container(obj_1, obj_2, key=""):
                     _compare_container(v1, v2, key=k)
                 except KeyError:
                     raise NotEqual(f'KeyError with dict:{key=}, {k=}')
-
-    elif isinstance(obj_1, mne.EpochsArray):
-        obj_1_dict = obj_1.__dict__.copy()
-        obj_2_dict = obj_2.__dict__.copy()
-
-        del obj_1_dict['_raw_times']
-        del obj_2_dict['_raw_times']
-        del obj_1_dict['_times_readonly']
-        del obj_2_dict['_times_readonly']
-
-        _compare_container(obj_1_dict, obj_2_dict)
 
     elif isinstance(obj_1, (pd.DataFrame, pd.Series)):
         _compare_container(obj_1.values, obj_2.values)

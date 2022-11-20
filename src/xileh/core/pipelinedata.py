@@ -40,11 +40,6 @@ class xPData(object):
             Use a list of xPData object within on xPData object to pass
             multiple data entities through a pipeline
 
-            Note: More involved data types are possible, such as mne.raw
-            or epoch object. In this case you either have to overwrite
-            all functions to be used in a pipeline by overwriting the
-            getter accordingly
-
         header : dict, optional
             general description of the data, potentially containing
             information to controll the processing flow (flags)
