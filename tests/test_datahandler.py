@@ -1,5 +1,5 @@
-from testing.test_pipelinedata import get_nested_test_data
-from testing.compare_utils import _compare_container
+from tests.test_pipelinedata import get_nested_test_data
+from tests.compare_utils import _compare_container
 
 from xileh.utils.datahandler.saving import save_to_folder
 from xileh.utils.datahandler.loading import (load_container,

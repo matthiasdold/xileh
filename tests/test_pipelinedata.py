@@ -15,7 +15,7 @@ from xileh.core.pipelinedata import xPData, from_container
 from xileh.core.pipelinedata import CheckedList
 from xileh.core.pipelinedata import from_dict
 
-from testing.compare_utils import _compare_container
+from tests.compare_utils import _compare_container
 from copy import deepcopy
 
 
