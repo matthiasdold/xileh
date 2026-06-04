@@ -1,0 +1,79 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - docs/index.qmd
+    - docs/guide/*.qmd
+    - docs/examples/*.qmd
+    - docs/api/*.qmd
+
+website:
+  title: "xileh"
+  description: "A lightweight, composable pipeline abstraction"
+  site-url: "https://bsdlab.github.io/xileh"
+  repo-url: "https://github.com/bsdlab/xileh"
+  repo-actions: [edit, issue]
+
+  navbar:
+    background: "#343a40"
+    search: true
+    left:
+      - text: "Home"
+        file: docs/index.qmd
+      - text: "API Reference"
+        file: docs/api/index.qmd
+      - text: "Examples"
+        file: docs/examples/index.qmd
+      - text: "Guide"
+        menu:
+          - text: "Installation"
+            file: docs/guide/installation.qmd
+          - text: "Quick Start"
+            file: docs/guide/quickstart.qmd
+          - text: "Contributing"
+            file: docs/guide/contributing.qmd
+    right:
+      - icon: github
+        href: "https://github.com/bsdlab/xileh"
+        aria-label: GitHub
+
+  sidebar:
+    - id: examples
+      title: "Examples"
+      location: left
+      contents:
+        - docs/examples/index.qmd
+        - section: "Core concepts"
+          contents:
+            - docs/examples/pipelinedata.qmd
+            - docs/examples/pipelines.qmd
+
+  page-footer:
+    left: |
+      Made with [Quarto](https://quarto.org/)
+    right:
+      - icon: github
+        href: "https://github.com/bsdlab/xileh"
+        aria-label: GitHub
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-copy: true
+    code-tools: true
+    highlight-style: github
+    link-external-newwindow: true
+
+execute:
+  cache: false
+  echo: true
+  warning: false
+  enabled: true
+
+jupyter: python3
+
+metadata-files:
+  - _quartodoc.yml
+  - docs/_sidebar.yml

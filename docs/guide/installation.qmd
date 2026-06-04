@@ -1,0 +1,37 @@
+---
+title: "Installation"
+---
+
+`xileh` targets Python 3.11+.
+
+## From PyPI
+
+```bash
+pip install xileh
+```
+
+## From source
+
+```bash
+git clone git@github.com:bsdlab/xileh.git
+cd xileh
+pip install .
+# or, for an editable install during development:
+pip install -e .
+```
+
+## Development environment
+
+The project uses [uv](https://github.com/astral-sh/uv) for dependency
+management. To set up a development environment with all optional groups:
+
+```bash
+uv sync --extra all
+```
+
+Optional dependency groups:
+
+- `dev` — `pytest`, `pytest-cov`, `ruff`, `ipython`
+- `docs` — Quarto / quartodoc documentation tooling
+- `build` — `build`, `twine` for packaging
+- `all` — everything above

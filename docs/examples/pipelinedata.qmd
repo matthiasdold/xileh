@@ -1,0 +1,94 @@
+---
+title: "Pipeline data"
+---
+
+The [`xData`](../api/xData.qmd) container has three elements:
+
+1. **data** — usually an array or array-like; possibly a list of other `xData`
+   entities (which is what makes it hierarchical).
+2. **header** — a dict describing the data as a whole, optionally carrying
+   control flags for the processing flow. It always contains a `name`.
+3. **meta** — a dict of meta data linked to the data. If a meta value has a
+   `shape`, it is treated as per-record information and checked for alignment
+   with the data on assignment.
+
+## Initializing a container
+
+```{python}
+from xileh import xData
+
+# single data container -> nothing can be added
+pdata = xData("somedata", name="mycontainer")
+
+# a container that can be dynamically extended (data is a list)
+pdata = xData([], name="mycontainer")
+
+# with header data
+pdata = xData([], name="cont1", header={"description": "some useful container"})
+
+# nested initialization
+pdata = xData(
+    [xData([1, 2, 3, 4], name="array_1")],
+    name="outer_container_1",
+)
+pdata
+```
+
+## Get and set
+
+```{python}
+import numpy as np
+
+# the three accessors are equivalent
+assert (
+    pdata.get_by_name("array_1")
+    is pdata["array_1"]
+    is pdata.array_1
+)
+
+# setting the .data attribute
+pdata["array_1"].data = np.ones(3)
+pdata.array_1.data
+```
+
+Whole containers can be overwritten via the dict or attribute accessor:
+
+```{python}
+pdata["array_1"] = xData(np.zeros(3), name="array_1")
+pdata.array_1.data
+```
+
+## Add and delete
+
+```{python}
+# explicit, via get_by_name
+newc = pdata.get_by_name("newcont", create_if_missing=True)
+newc.data = np.ones(5)
+
+# or more concise
+pdata.add(np.ones(3), name="another", header={"description": "a few ones"})
+
+pdata.delete_by_name("newcont")
+pdata.get_container_names()
+```
+
+## Inspecting
+
+```{python}
+pdata.get_containers()  # alias: pdata.gc()
+```
+
+## Save and load
+
+```{python}
+import tempfile
+from pathlib import Path
+from xileh.core.pipelinedata import from_container
+
+with tempfile.TemporaryDirectory() as tmp:
+    fname = Path(tmp, "test_container")
+    pdata.save(fname)
+    reloaded = from_container(fname)
+
+reloaded
+```

@@ -1,0 +1,39 @@
+quartodoc:
+  title: API Reference
+  package: xileh
+  dir: docs/api
+  sidebar: docs/_sidebar.yml
+  options:
+    include_empty: false
+    include_classes: true
+    include_functions: true
+  parser: numpy
+  renderer:
+    style: markdown
+    show_signature: true
+    show_signature_annotations: true
+    display_name: relative
+  sections:
+    - title: Pipeline data container
+      desc: "The hierarchical data container passed between processing steps"
+      package: xileh.core.pipelinedata
+      contents:
+        - name: xData
+        - name: from_dict
+        - name: from_container
+    - title: Pipeline
+      desc: "Composable pipelines operating on xData containers"
+      package: xileh.core.pipeline
+      contents:
+        - name: xPipeline
+    - title: Signal processing
+      desc: "Example domain-specific pipeline steps"
+      package: xileh.lib.signal.filter
+      contents:
+        - name: bandfilter
+        - name: vectorized_filter
+    - title: Progress bars
+      desc: "Rich-backed progress bar wrapper"
+      package: xileh.utils.progress
+      contents:
+        - name: tqdm

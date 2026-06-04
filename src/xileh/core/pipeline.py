@@ -116,11 +116,11 @@ class xPipeline(object):
         self._steps = [t for t in self._steps if t[0] != name]
 
     def remove_steps(self, names: list[str]):
-        """Remove a step identified by the name
+        """Remove multiple steps identified by their names
 
         Parameters
         ----------
-        name: list[str]
+        names: list[str]
             names of the steps to drop from self._steps
 
         """
