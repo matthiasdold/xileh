@@ -1,0 +1,36 @@
+# API Reference {.doc .doc-index}
+
+## Pipeline data container
+
+The hierarchical data container passed between processing steps
+
+| | |
+| --- | --- |
+| [xData](xData.qmd#xileh.core.pipelinedata.xData) | The generalized pipeline data container |
+| [from_dict](from_dict.qmd#xileh.core.pipelinedata.from_dict) | Given a dictionary representation of an xData object |
+| [from_container](from_container.qmd#xileh.core.pipelinedata.from_container) | Load a container located at cpath |
+
+## Pipeline
+
+Composable pipelines operating on xData containers
+
+| | |
+| --- | --- |
+| [xPipeline](xPipeline.qmd#xileh.core.pipeline.xPipeline) | The pipeline as a individual realization of |
+
+## Signal processing
+
+Example domain-specific pipeline steps
+
+| | |
+| --- | --- |
+| [bandfilter](bandfilter.qmd#xileh.lib.signal.filter.bandfilter) | The bandfiltered info |
+| [vectorized_filter](vectorized_filter.qmd#xileh.lib.signal.filter.vectorized_filter) | The scipy filter is only able of dealing with 1d vectors |
+
+## Progress bars
+
+Rich-backed progress bar wrapper
+
+| | |
+| --- | --- |
+| [tqdm](tqdm.qmd#xileh.utils.progress.tqdm) | tqdm wrapper with a ``show_bar`` kwarg and DISABLE_PROGRESS_BAR env var support. |

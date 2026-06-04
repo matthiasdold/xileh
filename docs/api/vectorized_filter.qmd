@@ -1,0 +1,25 @@
+# vectorized_filter { #xileh.lib.signal.filter.vectorized_filter }
+
+```python
+lib.signal.filter.vectorized_filter(x, b, a, zi)
+```
+
+The scipy filter is only able of dealing with 1d vectors
+    use this wrapper to track n dimensional states via partial()
+    Not really vectorized of course
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                                         | Description                         | Default    |
+|--------|----------------------------------------------|-------------------------------------|------------|
+| x      | (np.array, (ntimes, nchan))                  | data matrix                         | _required_ |
+| b      | np.array                                     | filter parameters b                 | _required_ |
+| a      | np.array                                     | filter parameters a                 | _required_ |
+| zi     | (np.array, (max(len(a), len(b)) - 1, nchan)) | filter states separate per channels | _required_ |
+
+## Returns: {.doc-section .doc-section-returns}
+
+    fdata : np.array, (ntimes, nchan)
+        the filtered data per channel
+    zi : np.array, (max(len(a), len(b))-1, nchan)
+        the updated filter state

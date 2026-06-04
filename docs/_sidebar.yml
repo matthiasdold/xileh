@@ -1,0 +1,21 @@
+website:
+  sidebar:
+  - contents:
+    - docs/api/index.qmd
+    - contents:
+      - docs/api/xData.qmd
+      - docs/api/from_dict.qmd
+      - docs/api/from_container.qmd
+      section: Pipeline data container
+    - contents:
+      - docs/api/xPipeline.qmd
+      section: Pipeline
+    - contents:
+      - docs/api/bandfilter.qmd
+      - docs/api/vectorized_filter.qmd
+      section: Signal processing
+    - contents:
+      - docs/api/tqdm.qmd
+      section: Progress bars
+    id: docs/api
+  - id: dummy-sidebar

@@ -1,0 +1,19 @@
+# from_container { #xileh.core.pipelinedata.from_container }
+
+```python
+core.pipelinedata.from_container(cpath)
+```
+
+Load a container located at cpath
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                | Description           | Default    |
+|--------|---------------------|-----------------------|------------|
+| cpath  | str or pathlib.Path | path to the container | _required_ |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                                |
+|--------|--------|--------------------------------------------|
+| pdata  | xData  | a pipelinedata container loaded from cpath |

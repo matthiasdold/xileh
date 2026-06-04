@@ -1,0 +1,31 @@
+# bandfilter { #xileh.lib.signal.filter.bandfilter }
+
+```python
+lib.signal.filter.bandfilter(
+    pdata,
+    src_container,
+    mode,
+    suffix,
+    lfilter_cfg_container,
+    store_filter_state,
+)
+```
+
+The bandfiltered info
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name                  | Type                     | Description                                                                                                                 | Default          |
+|-----------------------|--------------------------|-----------------------------------------------------------------------------------------------------------------------------|------------------|
+| pdata                 | xData                    | the data container to hand over                                                                                             | _required_       |
+| src_container         | str                      | name of container to work with                                                                                              | `''`             |
+| mode                  | (str, (append, inplace)) | whether to modify the container or append a suffixed version                                                                | `'append'`       |
+| suffix                | str                      | suffix to use if mode=append                                                                                                | `'bandfiltered'` |
+| lfilter_cfg_container | xData                    | container for the filter config, containing a, b, zi                                                                        | `''`             |
+| store_filter_state    | bool                     | whether or not to write zi back to the storage container effectively continuing with the last filter state on the next call | `True`           |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                        |
+|--------|--------|------------------------------------|
+| pdata  | xData  | the modified or appended container |

@@ -1,0 +1,168 @@
+# xPipeline { #xileh.core.pipeline.xPipeline }
+
+```python
+core.pipeline.xPipeline(
+    name: str,
+    verbose: bool = False,
+    silent: bool = False,
+    log_eval: bool = False,
+)
+```
+
+The pipeline as a individual realization of
+processing steps and data -> strongly motivated
+by scipy's pipeline
+
+## Methods
+
+| Name | Description |
+| --- | --- |
+| [add_step](#xileh.core.pipeline.xPipeline.add_step) | Add a processing step |
+| [add_steps](#xileh.core.pipeline.xPipeline.add_steps) | Add a processing steps |
+| [check_step_foo](#xileh.core.pipeline.xPipeline.check_step_foo) | Check the tuple formulating a step function |
+| [eval](#xileh.core.pipeline.xPipeline.eval) | Run all steps in self._steps |
+| [get_step](#xileh.core.pipeline.xPipeline.get_step) | Get step by name |
+| [remove_step](#xileh.core.pipeline.xPipeline.remove_step) | Remove a step identified by the name |
+| [remove_steps](#xileh.core.pipeline.xPipeline.remove_steps) | Remove a step identified by the name |
+| [replace_step](#xileh.core.pipeline.xPipeline.replace_step) | Replace a function given its name |
+| [set_step_kwargs](#xileh.core.pipeline.xPipeline.set_step_kwargs) | Update the kwargs set for a particular step |
+
+### add_step { #xileh.core.pipeline.xPipeline.add_step }
+
+```python
+core.pipeline.xPipeline.add_step(step_foo: tuple)
+```
+
+Add a processing step
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                          | Description                                                                                                         | Default    |
+|----------|-------------------------------|---------------------------------------------------------------------------------------------------------------------|------------|
+| step_foo | tuple(name, function, kwargs) | name of the step, function which needs to be able to process a xData object and (optional) kwargs for this function | _required_ |
+
+### add_steps { #xileh.core.pipeline.xPipeline.add_steps }
+
+```python
+core.pipeline.xPipeline.add_steps(*steps)
+```
+
+Add a processing steps
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type                           | Description                                                                                                         | Default   |
+|--------|--------------------------------|---------------------------------------------------------------------------------------------------------------------|-----------|
+| steps  | tuples(name, function, kwargs) | name of the step, function which needs to be able to process a xData object and (optional) kwargs for this function | `()`      |
+
+### check_step_foo { #xileh.core.pipeline.xPipeline.check_step_foo }
+
+```python
+core.pipeline.xPipeline.check_step_foo(step_foo)
+```
+
+Check the tuple formulating a step function
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                          | Description                                                                                                         | Default    |
+|----------|-------------------------------|---------------------------------------------------------------------------------------------------------------------|------------|
+| step_foo | tuple(name, function, kwargs) | name of the step, function which needs to be able to process a xData object and (optional) kwargs for this function | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name     | Type                          | Description                                                                                |
+|----------|-------------------------------|--------------------------------------------------------------------------------------------|
+| step_foo | tuple(name, function, kwargs) | tuple as input but with kwargs={} extended in case step_foo only contains (name, function) |
+
+### eval { #xileh.core.pipeline.xPipeline.eval }
+
+```python
+core.pipeline.xPipeline.eval(pdata: xData)
+```
+
+Run all steps in self._steps
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type               | Description                      | Default    |
+|--------|--------------------|----------------------------------|------------|
+| pdata  | pipelinedata.xData | The xData object to be processed | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type          | Description                                               |
+|--------|---------------|-----------------------------------------------------------|
+|        | pdata : xData | Return the pipelined data after running through all steps |
+
+### get_step { #xileh.core.pipeline.xPipeline.get_step }
+
+```python
+core.pipeline.xPipeline.get_step(name)
+```
+
+Get step by name
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                                 | Default    |
+|--------|--------|---------------------------------------------|------------|
+| name   | str    | step name i.e first value of the step tuple | _required_ |
+
+#### Returns {.doc-section .doc-section-returns}
+
+| Name   | Type                          | Description                      |
+|--------|-------------------------------|----------------------------------|
+| step   | tuple(name, function, kwargs) | the selected processing step     |
+| idx    | int                           | index of step within self._steps |
+
+### remove_step { #xileh.core.pipeline.xPipeline.remove_step }
+
+```python
+core.pipeline.xPipeline.remove_step(name: str)
+```
+
+Remove a step identified by the name
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                               | Default    |
+|--------|--------|-------------------------------------------|------------|
+| name   | str    | name of the step to drop from self._steps | _required_ |
+
+### remove_steps { #xileh.core.pipeline.xPipeline.remove_steps }
+
+```python
+core.pipeline.xPipeline.remove_steps(names: list[str])
+```
+
+Remove a step identified by the name
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                                 | Default    |
+|--------|--------|---------------------------------------------|------------|
+| name   |        | names of the steps to drop from self._steps | _required_ |
+
+### replace_step { #xileh.core.pipeline.xPipeline.replace_step }
+
+```python
+core.pipeline.xPipeline.replace_step(name, step_foo)
+```
+
+Replace a function given its name
+
+#### Parameters {.doc-section .doc-section-parameters}
+
+| Name     | Type                          | Description                                                                                                         | Default    |
+|----------|-------------------------------|---------------------------------------------------------------------------------------------------------------------|------------|
+| name     | str                           | step name i.e first value of the step tuple                                                                         | _required_ |
+| step_foo | tuple(name, function, kwargs) | name of the step, function which needs to be able to process a xData object and (optional) kwargs for this function | _required_ |
+
+### set_step_kwargs { #xileh.core.pipeline.xPipeline.set_step_kwargs }
+
+```python
+core.pipeline.xPipeline.set_step_kwargs(name, **kwargs)
+```
+
+Update the kwargs set for a particular step

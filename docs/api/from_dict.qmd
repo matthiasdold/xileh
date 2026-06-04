@@ -1,0 +1,23 @@
+# from_dict { #xileh.core.pipelinedata.from_dict }
+
+```python
+core.pipelinedata.from_dict(d)
+```
+
+Given a dictionary representation of an xData object
+reconstruct --> inverser of xData._to_dict
+
+NOTE: The dictionary and its values will be linked to the xData container
+by reference. Create a deep copy if necessary.
+
+## Parameters {.doc-section .doc-section-parameters}
+
+| Name   | Type   | Description                                 | Default    |
+|--------|--------|---------------------------------------------|------------|
+| d      | dict   | dictionary representation of a xData object | _required_ |
+
+## Returns {.doc-section .doc-section-returns}
+
+| Name   | Type   | Description                                           |
+|--------|--------|-------------------------------------------------------|
+| xpd    | xData  | the pipeline data instance according to the data in d |
