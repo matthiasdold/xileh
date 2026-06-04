@@ -8,13 +8,41 @@
 
 
 import shutil
-import toml
 
 from pathlib import Path
 from functools import wraps
 
 import pandas as pd
 import numpy as np
+import tomli_w
+
+
+def _to_native(obj):
+    """Recursively cast numpy scalars/arrays to native Python types.
+
+    ``tomli_w`` (unlike the legacy ``toml`` package's ``TomlNumpyEncoder``)
+    cannot serialise numpy scalar types such as ``numpy.float64``, so values
+    are converted to their Python equivalents before dumping.
+
+    Parameters
+    ----------
+    obj : object
+        Arbitrary nested structure of dicts, lists, numpy or native values.
+
+    Returns
+    -------
+    object
+        The same structure with numpy types replaced by native equivalents.
+    """
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_native(v) for v in obj]
+    if isinstance(obj, np.ndarray):
+        return _to_native(obj.tolist())
+    if isinstance(obj, np.generic):
+        return obj.item()
+    return obj
 
 
 def prepare_save(func):
@@ -53,11 +81,11 @@ def save_serializable(data, fname=Path()):
     # get rid of the extra folder which is needed for all other loaders
     fname = fname.parents[1]
 
-    # the NumpyEncoder is the reason for using toml all together
-    # as yaml fails if e.g. a numpy.float64 float is presented
+    # numpy scalars are cast to native types before dumping, as TOML (and
+    # yaml) cannot serialise e.g. a numpy.float64 directly
 
-    toml.dump(data, open(fname.joinpath('container.toml'), 'w'),
-              encoder=toml.TomlNumpyEncoder())
+    with open(fname.joinpath('container.toml'), 'wb') as f:
+        tomli_w.dump(_to_native(data), f)
     # option = (
     #     orjson.OPT_SERIALIZE_NUMPY |            # should be able to work with numpy.float etc.      # noqa
     #     orjson.OPT_NAIVE_UTC |
