@@ -38,13 +38,9 @@ jobs:
           pip install uv
           uv pip install --system ".[all]"
 
-      - name: Build API Documentation
-        run: |
-          quartodoc build --config _quartodoc.yml
-
       - name: Render Quarto Project
         run: |
-          quarto render
+          quarto render  # the pre-render hook runs `quartodoc build` first
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

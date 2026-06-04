@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: _site
+  pre-render:
+    - quartodoc build --config _quartodoc.yml
   render:
     - docs/index.qmd
     - docs/guide/*.qmd
