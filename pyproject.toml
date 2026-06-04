@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xileh"
-version = "0.2.0"
+version = "0.2.1"
 authors = [{ name = "Matthias Dold", email = "matthias.dold@gmx.net" }]
 description = "A lightweight, composable pipeline abstraction built around a hierarchical data container."
 readme = "README.md"
@@ -22,13 +22,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = [
-  "numpy",
-  "pyyaml",
-  "tqdm",
-  "rich",
-  "tomli-w",
-]
+dependencies = ["numpy", "pyyaml", "tqdm", "rich", "tomli-w"]
 
 [project.optional-dependencies]
 # Optional data backends. `lite` is the default (bare) install and is an
