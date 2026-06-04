@@ -1,0 +1,57 @@
+---
+title: "Quick Start"
+---
+
+This walks through the two core ideas: building an `xData` container and
+running an `xPipeline` over it.
+
+## A container
+
+```{python}
+from xileh import xData
+
+pdata = xData(
+    [
+        xData([1, 2, 3, 4], name="array_1"),
+        xData("string", name="string_1"),
+    ],
+    name="outer_container",
+)
+pdata
+```
+
+Containers are accessed by name in three equivalent ways:
+
+```{python}
+assert pdata.get_by_name("array_1") is pdata["array_1"] is pdata.array_1
+pdata["array_1"].data
+```
+
+## A pipeline
+
+A pipeline step is any function that takes an `xData` and returns it.
+
+```{python}
+from xileh import xPipeline
+
+
+def add_ones(pdata, name="ones", size=3):
+    pdata.add([1] * size, name=name)
+    return pdata
+
+
+pl = xPipeline("demo", silent=True)
+pl.add_steps(
+    ("add_ones", add_ones),
+    ("add_more", add_ones, {"name": "more_ones", "size": 5}),
+)
+
+root = xData([], name="root")
+pl.eval(root)
+root
+```
+
+`xPData` remains available as a backwards-compatible alias for `xData`.
+
+Continue with the [pipeline data](../examples/pipelinedata.qmd) and
+[pipelines](../examples/pipelines.qmd) examples for the full API.

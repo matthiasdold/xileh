@@ -9,9 +9,8 @@
 
 import numpy as np
 
-from tqdm import tqdm
-
-from xileh.core.pipelinedata import xPData
+from xileh.utils.progress import tqdm
+from xileh.core.pipelinedata import xData
 from xileh.utils.logger import PlainLogger
 
 
@@ -61,7 +60,7 @@ class xPipeline(object):
         ----------
         step_foo : tuple (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a xPData object and (optional) kwargs for this function
+            a xData object and (optional) kwargs for this function
 
         Returns
         -------
@@ -75,14 +74,14 @@ class xPipeline(object):
 
         return step_foo
 
-    def add_step(self, step_foo):
+    def add_step(self, step_foo: tuple):
         """ Add a processing step
 
         Parameters
         ----------
         step_foo : tuple (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a xPData object and (optional) kwargs for this function
+            a xData object and (optional) kwargs for this function
         """
 
         # check that name is not yet used
@@ -99,12 +98,12 @@ class xPipeline(object):
         ----------
         steps : tuples (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a xPData object and (optional) kwargs for this function
+            a xData object and (optional) kwargs for this function
         """
         for step in steps:
             self.add_step(step)
 
-    def remove_step(self, name):
+    def remove_step(self, name: str):
         """Remove a step identified by the name
 
         Parameters
@@ -116,12 +115,12 @@ class xPipeline(object):
 
         self._steps = [t for t in self._steps if t[0] != name]
 
-    def remove_steps(self, names):
-        """Remove a step identified by the name
+    def remove_steps(self, names: list[str]):
+        """Remove multiple steps identified by their names
 
         Parameters
         ----------
-        name: list[str]
+        names: list[str]
             names of the steps to drop from self._steps
 
         """
@@ -167,7 +166,7 @@ class xPipeline(object):
             step name i.e first value of the step tuple
         step_foo : tuple (name, function, kwargs)
             name of the step, function which needs to be able to process
-            a xPData object and (optional) kwargs for this function
+            a xData object and (optional) kwargs for this function
 
         """
 
@@ -184,16 +183,16 @@ class xPipeline(object):
         # tuple is unmuteable, but the dictionary at step[2] is muteable
         step[2].update(kwargs)
 
-    def eval(self, pdata: xPData):
+    def eval(self, pdata: xData):
         """ Run all steps in self._steps
         Parameters
         ----------
-        pdata : pipelinedata.xPData
-            The xPData object to be processed
+        pdata : pipelinedata.xData
+            The xData object to be processed
 
         Returns
         -------
-            pdata : xPData
+            pdata : xData
                 Return the pipelined data after running through all steps
 
         """
@@ -241,7 +240,7 @@ class xPipeline(object):
 
 if __name__ == "__main__":
 
-    tdata = xPData(
+    tdata = xData(
         data=np.eye(5),
         header={'description': 'Some data description'},
         meta={'mean': 5},

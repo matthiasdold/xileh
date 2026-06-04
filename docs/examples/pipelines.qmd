@@ -1,0 +1,108 @@
+---
+title: "Pipelines"
+---
+
+A [`xPipeline`](../api/xPipeline.qmd) is a concatenation of functions operating
+on `xData` objects.
+
+## Function signature
+
+Every pipeline function takes a single `xData` argument (plus any keyword
+arguments) and **returns** the (modified) container.
+
+```{python}
+def add_data_entity(pdata, name="myname", size=1):
+    """Add a simple data entity to the container.
+
+    A valid pipeline function has exactly one positional argument, the xData
+    object being processed, and may have any number of keyword arguments
+    (which are logged alongside the pipeline step).
+    """
+    pdata.add([1, 2, 3] * size, name=name)
+    # every pipeline function must return the pdata object, making explicit
+    # that it modifies and passes on the container
+    return pdata
+```
+
+## Initialization
+
+```{python}
+from xileh import xData, xPipeline
+
+pl = xPipeline("test_pipeline", silent=True)
+pl.add_steps(
+    ("add_to_data", add_data_entity),
+    ("add_to_data_2", add_data_entity, {"name": "another_test"}),
+)
+pl
+```
+
+The internal step list holds tuples of (`name`, `function`, `kwargs`):
+
+```{python}
+pl.steps
+```
+
+A single step can be looked up by name:
+
+```{python}
+pl.get_step("add_to_data_2")
+```
+
+## Evaluating
+
+```{python}
+pdata = xData([], name="outercontainer")
+pl.eval(pdata)
+pdata.get_container_names()
+```
+
+## Modifying steps
+
+```{python}
+def foo(pdata, k="abc"):
+    return pdata
+
+
+# replace a step entirely
+pl.replace_step("add_to_data", ("new_step", foo))
+
+# update the kwargs of a step
+pl.add_steps(("test_step", foo))
+pl.set_step_kwargs("test_step", k="cde")
+
+# remove steps
+pl.remove_step("new_step")
+pl.remove_steps(["add_to_data_2"])
+pl
+```
+
+## Composing pipelines
+
+Because steps are plain tuples, pipelines compose by splatting another
+pipeline's steps:
+
+```{python}
+def print_foo(pdata):
+    for name in pdata.get_container_names():
+        print(f"{name} - {pdata[name].data}")
+    return pdata
+
+
+combined = xPipeline("combined", silent=True)
+combined.add_steps(
+    ("print_before", print_foo),
+    *pl.steps,
+    ("print_after", print_foo),
+)
+combined
+```
+
+## Early stopping
+
+A pipeline function can short-circuit the remaining steps by setting
+`early_stop` in the container header (e.g. when loading data finds nothing):
+
+```python
+pdata.header["early_stop"] = True
+```

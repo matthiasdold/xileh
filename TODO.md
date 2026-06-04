@@ -1,2 +1,0 @@
-- [ ] Error handling if no name is provided for a container on `.add` call
-- [ ] tomllib and toml for versions < 3.11

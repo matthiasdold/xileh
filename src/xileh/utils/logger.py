@@ -9,14 +9,14 @@
 # Target for usage: Apply the logger as a decorator
 #
 # NOTE: We also implement a file logger with plain print function -->
-# reason being that the logging.Logger cannot be pickled, which would be
-# necessary to evaluate pipelines on nemo atm
+# reason being that the logging.Logger cannot be pickled, which is required
+# when pipelines need to be transported across process boundaries.
 import time
 import inspect
 import functools
 import logging
 
-from tqdm import tqdm
+from xileh.utils.progress import tqdm
 
 FILE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 CONSOLE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")

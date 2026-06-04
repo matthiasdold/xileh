@@ -1,0 +1,10 @@
+---
+title: "Examples"
+---
+
+Worked examples of the two core concepts:
+
+- [Pipeline data](pipelinedata.qmd) — building, accessing, mutating, and
+  persisting `xData` containers.
+- [Pipelines](pipelines.qmd) — composing, inspecting, and evaluating
+  `xPipeline` objects.

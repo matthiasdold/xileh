@@ -8,39 +8,66 @@
 
 
 import shutil
-import toml
 
 from pathlib import Path
 from functools import wraps
 
 import pandas as pd
 import numpy as np
+import tomli_w
+
+
+def _to_native(obj):
+    """Recursively cast numpy scalars/arrays to native Python types.
+
+    ``tomli_w`` (unlike the legacy ``toml`` package's ``TomlNumpyEncoder``)
+    cannot serialise numpy scalar types such as ``numpy.float64``, so values
+    are converted to their Python equivalents before dumping.
+
+    Parameters
+    ----------
+    obj : object
+        Arbitrary nested structure of dicts, lists, numpy or native values.
+
+    Returns
+    -------
+    object
+        The same structure with numpy types replaced by native equivalents.
+    """
+    if isinstance(obj, dict):
+        return {k: _to_native(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_native(v) for v in obj]
+    if isinstance(obj, np.ndarray):
+        return _to_native(obj.tolist())
+    if isinstance(obj, np.generic):
+        return obj.item()
+    return obj
 
 
 def prepare_save(func):
-    """ Prepare for any saver function by e.g. creating the fname """
+    """Prepare for any saver function by e.g. creating the fname"""
 
     @wraps(func)
     def prepare_wrapped(*args, **kwargs):
-        Path(kwargs['fname'], 'extra').mkdir(exist_ok=True, parents=True)
+        Path(kwargs["fname"], "extra").mkdir(exist_ok=True, parents=True)
 
         # add a file prefix to fname which otherwise just points to the
         # container
         # increment the data_{n} count --> explicit names will be in the toml
-        data_files = list(
-            Path(kwargs['fname'], 'extra').glob('data_*_*'))
+        data_files = list(Path(kwargs["fname"], "extra").glob("data_*_*"))
 
         if data_files != []:
-            nmax = max([int(p.stem.split('_')[1]) for p in data_files])
+            nmax = max([int(p.stem.split("_")[1]) for p in data_files])
         else:
             nmax = 0
 
-        kwargs['fname'] = Path(kwargs['fname']).joinpath('extra',
-                                                         f'data_{nmax + 1}_')
+        kwargs["fname"] = Path(kwargs["fname"]).joinpath("extra", f"data_{nmax + 1}_")
 
         return func(*args, **kwargs)
 
     return prepare_wrapped
+
 
 # =============================================================================
 # Non serializable savers
@@ -53,11 +80,11 @@ def save_serializable(data, fname=Path()):
     # get rid of the extra folder which is needed for all other loaders
     fname = fname.parents[1]
 
-    # the NumpyEncoder is the reason for using toml all together
-    # as yaml fails if e.g. a numpy.float64 float is presented
+    # numpy scalars are cast to native types before dumping, as TOML (and
+    # yaml) cannot serialise e.g. a numpy.float64 directly
 
-    toml.dump(data, open(fname.joinpath('container.toml'), 'w'),
-              encoder=toml.TomlNumpyEncoder())
+    with open(fname.joinpath("container.toml"), "wb") as f:
+        tomli_w.dump(_to_native(data), f)
     # option = (
     #     orjson.OPT_SERIALIZE_NUMPY |            # should be able to work with numpy.float etc.      # noqa
     #     orjson.OPT_NAIVE_UTC |
@@ -70,37 +97,37 @@ def save_serializable(data, fname=Path()):
 
 @prepare_save
 def pandas_saver(data, fname=Path()):
-    """ Store pandas data objects """
+    """Store pandas data objects"""
 
     # complete the prefix and store
-    fname = fname.parent.joinpath(fname.stem + 'pandas.hdf')
-    data.to_hdf(fname, 'group1')
+    fname = fname.parent.joinpath(fname.stem + "pandas.hdf")
+    data.to_hdf(fname, "group1")
 
-    return {'extra_fname': str(fname), 'type': str(type(data))}
+    return {"extra_fname": str(fname), "type": str(type(data))}
 
 
 @prepare_save
 def numpy_saver(data, fname=Path()):
-    """ Store numpy objects """
+    """Store numpy objects"""
 
     # complete the prefix and store
-    fname = fname.parent.joinpath(fname.stem + 'numpy.npy')
+    fname = fname.parent.joinpath(fname.stem + "numpy.npy")
     np.save(fname, data)
-    return {'extra_fname': str(fname), 'type': str(type(data))}
+    return {"extra_fname": str(fname), "type": str(type(data))}
 
 
 @prepare_save
 def transform_paths(data, fname=Path()):
-    """ Cast paths to string """
-    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
-    return {'transformed_data': str(data), 'type': str(type(data))}
+    """Cast paths to string"""
+    fname = fname.parent.joinpath(fname.stem + "ica.fif")
+    return {"transformed_data": str(data), "type": str(type(data))}
 
 
 @prepare_save
 def transform_named_int(data, fname=Path()):
-    """ Cast paths to string for saving in yaml """
-    fname = fname.parent.joinpath(fname.stem + 'ica.fif')
-    return {'transformed_data': str(data), 'type': str(type(data))}
+    """Cast paths to string for saving in yaml"""
+    fname = fname.parent.joinpath(fname.stem + "ica.fif")
+    return {"transformed_data": str(data), "type": str(type(data))}
 
 
 # Note: types work as dict keys as well - nice
@@ -113,7 +140,7 @@ non_serializeable_types = {
 
 
 def get_saver(data):
-    """ Get the correct saver for a given data type """
+    """Get the correct saver for a given data type"""
     # NOTE this is done instead of directly looking up in the dict,
     # as this avoids needing to include every subclass since check is done
     # via isinstance
@@ -130,8 +157,8 @@ def get_saver(data):
 # =============================================================================
 
 
-def save_to_folder(data: dict, fname: str = '', overwrite: bool = False):
-    """ Save data in the dictionary to a given folder """
+def save_to_folder(data: dict, fname: str | Path = "", overwrite: bool = False):
+    """Save data in the dictionary to a given folder"""
     # --> if there would be an overwrite and it is not specified, ask
     save = True
 
@@ -140,11 +167,13 @@ def save_to_folder(data: dict, fname: str = '', overwrite: bool = False):
         if overwrite:
             pass
         else:
-            q = ''
-            while q not in ['y', 'n']:
-                q = input(f"There is already a container at {fname}\n Do you"
-                          " want to overwrite [y/n]? ")
-            if q == 'y':
+            q = ""
+            while q not in ["y", "n"]:
+                q = input(
+                    f"There is already a container at {fname}\n Do you"
+                    " want to overwrite [y/n]? "
+                )
+            if q == "y":
                 overwrite = True
                 print(f"Removing for overwrite: {fname}")
                 shutil.rmtree(Path(fname))
@@ -202,10 +231,12 @@ def save_non_serializables_in_iterable(iter, fname):
     if isinstance(iter, set):
         return iter
     else:
-        ret = [save_non_serializable(v, fname)
-               if not isinstance(v, (tuple, list))
-               else save_non_serializables_in_iterable(v, fname)
-               for v in iter]
+        ret = [
+            save_non_serializable(v, fname)
+            if not isinstance(v, (tuple, list))
+            else save_non_serializables_in_iterable(v, fname)
+            for v in iter
+        ]
 
         if isinstance(iter, tuple):
             ret = tuple(ret)
@@ -217,10 +248,10 @@ def save_non_serializable(v, fname):
         meta = get_saver(v)(v, fname=fname)
 
         # make path local
-        if 'extra_fname' in meta.keys():
-            pth = Path(meta['extra_fname'])
-            meta['extra_fname'] = str(
-                Path('.').joinpath(pth.parent.stem, pth.stem + pth.suffix)
+        if "extra_fname" in meta.keys():
+            pth = Path(meta["extra_fname"])
+            meta["extra_fname"] = str(
+                Path(".").joinpath(pth.parent.stem, pth.stem + pth.suffix)
             )
 
         return meta
@@ -232,13 +263,15 @@ def save_non_serializable(v, fname):
         return v
 
 
-if __name__ == '__main__':
-    from xileh import xPData
+if __name__ == "__main__":
+    from xileh import xData
     import numpy as np
-    pdata = xPData([xPData(np.ones(1000), name='some_numpy'),
-                    xPData('test', name='some_text')],
-                   name='test_container')
+
+    pdata = xData(
+        [xData(np.ones(1000), name="some_numpy"), xData("test", name="some_text")],
+        name="test_container",
+    )
 
     data = pdata._to_dict()
 
-    save_to_folder(data, fname='test_container')
+    save_to_folder(data, fname="test_container")

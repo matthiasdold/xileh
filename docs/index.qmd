@@ -1,0 +1,37 @@
+---
+title: "xileh"
+---
+
+**xileh** is a lightweight, composable pipeline abstraction built around a
+hierarchical data container. It generalizes the `sklearn.Pipeline` idea beyond
+a feature matrix `X` and target `y` to arbitrary, nested data structures.
+
+The library is built from two components:
+
+- [`xData`](docs/api/xData.qmd) — a hierarchical container holding *data*, a
+  *header* (description / control flags), and *meta* information.
+- [`xPipeline`](docs/api/xPipeline.qmd) — an ordered set of plain Python
+  functions that each take and return an `xData` object.
+
+## Design philosophy
+
+`xileh` deliberately aims to:
+
+- impose as few restrictions on your workflow as possible (arbitrary data
+  objects and plain Python functions),
+- integrate easily with a function-based workflow during development,
+- provide a single source of truth for the processing,
+- enable reuse of whole pipelines by strongly motivating composition.
+
+Take `sklearn.Pipeline` as the motivating example: it is great for building,
+storing, and evaluating ML pipelines, but it is specific about the shape of
+data it processes and how (`fit` / `transform`). `xileh` trades built-in
+functionality for maximal freedom: a single object describing the full
+pipeline, over any data.
+
+## Where to next?
+
+- [Installation](docs/guide/installation.qmd)
+- [Quick Start](docs/guide/quickstart.qmd)
+- [Examples](docs/examples/index.qmd)
+- [API Reference](docs/api/index.qmd)

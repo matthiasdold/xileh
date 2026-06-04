@@ -8,6 +8,7 @@
 
 # from methodtools import lru_cache
 
+import logging
 import warnings
 import numpy as np
 
@@ -18,16 +19,18 @@ from xileh.utils.datahandler.loading import load_container as _load_container
 
 from copy import deepcopy
 
+logger = logging.getLogger(__name__)
 
-class xPData(object):
+
+class xData:
 
     """
     The generalized pipeline data container
     """
 
-    def __init__(self, data=None, header={},
-                 meta={}, name=None):
-        """ Create the xPData object with:
+    def __init__(self, data=None, header: dict | None = None,
+                 meta: dict | None = None, name: str | None = None):
+        """ Create the xData object with:
 
         Parameters
         ----------
@@ -37,7 +40,7 @@ class xPData(object):
             usually of the form (n_variables x n_times x ...)
 
             Special usage:
-            Use a list of xPData object within on xPData object to pass
+            Use a list of xData object within on xData object to pass
             multiple data entities through a pipeline
 
         header : dict, optional
@@ -60,6 +63,9 @@ class xPData(object):
 
 
         """
+        header = {} if header is None else header
+        meta = {} if meta is None else meta
+
         self._validate_input(data, header, meta, name)
 
         # Add name to header -> no overwrite as _validate_input
@@ -89,15 +95,15 @@ class xPData(object):
     def __setitem__(self, name, value):
 
         if name in ['header', 'meta']:
-            print(f">>> You are trying to set an item with name={name}, "
-                  "this will most likely fail in the next step as the "
-                  "object cannot distinguish between a container with that "
-                  "name or the property. If you mean to set a header of meta,"
-                  " try using the attribute notation."
-                  )
+            logger.warning(
+                "You are trying to set an item with name=%s, this will most "
+                "likely fail in the next step as the object cannot distinguish "
+                "between a container with that name or the property. If you "
+                "mean to set a header or meta, try using the attribute "
+                "notation.", name)
 
-        assert isinstance(value, xPData), "You can only assign xPData"\
-            " containers to a xPData container"
+        assert isinstance(value, xData), "You can only assign xData"\
+            " containers to a xData container"
 
         trg = self.get_by_name(name)
 
@@ -111,18 +117,18 @@ class xPData(object):
     def __repr__(self):
         """ Print more information about the container on repl call """
         # return super().__repr__() + f"\nContainer: {self.header['name']}"
-        s = f'xPData object at {hex(id(self))} '\
+        s = f'xData object at {hex(id(self))} '\
             f'- with size {self.__sizeof__()}\n'
         s += pretty_print_get_containers(self.get_containers())
         return s
 
     def __setattr__(self, name, value):
         """
-        Two possibilities, set another xPData -> register all subcontainers
+        Two possibilities, set another xData -> register all subcontainers
         or simply overwrite object
         """
         # Assign a container -> overwrite
-        if (isinstance(value, xPData) and name in self.get_container_names()):
+        if (isinstance(value, xData) and name in self.get_container_names()):
             trg_c = self[name]
             trg_c.overwrite(value)
 
@@ -257,13 +263,13 @@ class xPData(object):
             and append to the self.data if it is a list, else raise Error
         find_parent : bool
             if true return the parent container instead
-        parent : xileh.xPData
+        parent : xileh.xData
             a container to store the parent to be returned if find_parent is
             true. Used for recursive call of the method.
 
         Returns
         -------
-            data : xPData or None
+            data : xData or None
                 A data container with the given name or None if no container
                 with the given name can be found
 
@@ -279,7 +285,7 @@ class xPData(object):
         # Note: it is the coders responsibility to avoid conflicts with potentially             # noqa
         # multiple containers having the same name in their header property
         elif isinstance(self.data, list):
-            for pd in [p for p in self.data if isinstance(p, xPData)]:
+            for pd in [p for p in self.data if isinstance(p, xData)]:
                 # create_if_missing only on outer most container
                 data = pd.get_by_name(name, find_parent=find_parent,
                                       parent=self)
@@ -288,7 +294,7 @@ class xPData(object):
 
             # full iteration nothing found and last check --> here we create
             if data is None and create_if_missing:
-                data = xPData(None, name=name)
+                data = xData(None, name=name)
                 self.data.append(data)
 
         else:
@@ -305,7 +311,7 @@ class xPData(object):
 
         Parameters
         ----------
-        new_pdata : xPData
+        new_pdata : xData
             a new container to overwrite this containers content
 
         """
@@ -318,10 +324,10 @@ class xPData(object):
         name = self.header['name']
         d = {name: type(self.data)}
 
-        # check if we have a list with potential nested xPData structs
+        # check if we have a list with potential nested xData structs
         if isinstance(self.data, list) or isinstance(self.data, CheckedList):
             children = []
-            for pd in [p for p in self.data if isinstance(p, xPData)]:
+            for pd in [p for p in self.data if isinstance(p, xData)]:
                 children.append(pd.get_containers())
             d[name] = children
 
@@ -331,20 +337,25 @@ class xPData(object):
         """ Convenience alias for get_containers """
         return self.get_containers()
 
-    def add(self, value, name='', header={}, meta={}):
+    def add(self, value, name: str = '', header: dict | None = None,
+            meta: dict | None = None):
         """ Convenience alias creating a new container """
+        if not name:
+            raise ValueError(
+                "A non-empty 'name' is required when adding a container")
+
         trg = self.get_by_name(name, create_if_missing=True)
         trg.data = value
-        trg.header.update(header)
-        trg.meta = meta
+        trg.header.update({} if header is None else header)
+        trg.meta = {} if meta is None else meta
 
     def get_container_names(self):
         """ Get all container names """
         names = [self.header['name']]
 
-        # check if we have a list with potential nested xPData structs
+        # check if we have a list with potential nested xData structs
         if isinstance(self.data, list) or isinstance(self.data, CheckedList):
-            for pd in [p for p in self.data if isinstance(p, xPData)]:
+            for pd in [p for p in self.data if isinstance(p, xData)]:
                 names += pd.get_container_names()
 
         return names
@@ -367,7 +378,7 @@ class xPData(object):
             # bypass the setter by using _data here -> else conflict for resetting                                                                       # noqa
             parent._data = CheckedList(
                 [c for c in parent.data
-                 if isinstance(c, xPData)         # note only containers can be deleted by this approach, no need to check anything else      # noqa
+                 if isinstance(c, xData)         # note only containers can be deleted by this approach, no need to check anything else      # noqa
                  and c != trg_c], parent)
         else:
             raise ValueError(f"Parent of target with {name=} has an unknown"
@@ -395,7 +406,7 @@ class xPData(object):
         ddata = {}
         # potentially child containers
         if isinstance(self.data, list):
-            ddata['data'] = [v._to_dict() if isinstance(v, xPData) else v
+            ddata['data'] = [v._to_dict() if isinstance(v, xData) else v
                              for v in self.data]
         else:
             ddata['data'] = self.data
@@ -443,11 +454,11 @@ class xPData(object):
         convenience and helps to avoid issues which deepcopy encounters for
         copying nested structures
         """
-        ndata = xPData(data=None, name=self.name)
+        ndata = xData(data=None, name=self.name)
         # potentially child containers
 
         if isinstance(self.data, list):
-            ndata.data = [v.copy() if isinstance(v, xPData) else deepcopy(v)
+            ndata.data = [v.copy() if isinstance(v, xData) else deepcopy(v)
                           for v in self.data]
         else:
             ndata.data = self.data
@@ -466,7 +477,7 @@ class ContainerNameNotUniqueError(KeyError):
 class CheckedList(list):
 
     """ A helper list class for which the append method will be linked
-        To an xPData container for checking uniqueness if an xPData
+        To an xData container for checking uniqueness if an xData
         element is appended
 
         Also registers the name in the parents keys for ['<name>'] access
@@ -478,7 +489,7 @@ class CheckedList(list):
         self.xpdata = xpdata
 
     def append(self, elm):
-        """ Check for name conflict if an xPData elements should be
+        """ Check for name conflict if an xData elements should be
         appended
 
         Parameters
@@ -488,7 +499,7 @@ class CheckedList(list):
 
         """
 
-        if isinstance(elm, xPData) and elm.__dict__ != {}:
+        if isinstance(elm, xData) and elm.__dict__ != {}:
 
             if elm.header['name'] in self.xpdata.get_container_names():
                 raise ContainerNameNotUniqueError(
@@ -503,20 +514,20 @@ class CheckedList(list):
 
 
 def from_dict(d):
-    """ Given a dictionary representation of an xPData object
-    reconstruct --> inverser of xPData._to_dict
+    """ Given a dictionary representation of an xData object
+    reconstruct --> inverser of xData._to_dict
 
-    NOTE: The dictionary and its values will be linked to the xPData container
+    NOTE: The dictionary and its values will be linked to the xData container
     by reference. Create a deep copy if necessary.
 
     Parameters
     ----------
     d : dict
-        dictionary representation of a xPData object
+        dictionary representation of a xData object
 
     Returns
     -------
-    xpd : xPData
+    xpd : xData
         the pipeline data instance according to the data in d
     """
 
@@ -526,12 +537,12 @@ def from_dict(d):
     else:
         type_key = 'datatype'
 
-    assert d[type_key] == 'xPData', "Dictionary needs to represent a xPData"\
+    assert d[type_key] == 'xPData', "Dictionary needs to represent a xData"\
         " object which needs a datatype=='xPData' key:value pair - received"\
         f" {d}"
     names = [k for k in d.keys() if k != type_key]
 
-    assert len(names) == 1, "Unknown structure for casting dict to xPData"\
+    assert len(names) == 1, "Unknown structure for casting dict to xData"\
         " - expected one key for the container name + one 'datatype' "\
         "nothing more"
 
@@ -564,7 +575,7 @@ def from_dict(d):
     if 'meta' not in elms.keys():
         elms['meta'] = {}
 
-    return xPData(elms['data'],
+    return xData(elms['data'],
                   header=elms['header'],
                   meta=elms['meta'])
 
@@ -579,7 +590,7 @@ def from_container(cpath):
 
     Returns
     -------
-    pdata : xPData
+    pdata : xData
         a pipelinedata container loaded from cpath
     """
     pdata = from_dict(_load_container(cpath))
@@ -606,19 +617,23 @@ def pretty_print_get_containers(d, depth=0):
     return s
 
 
+# Backwards-compatible alias: the container was renamed from xPData to xData.
+xPData = xData
+
+
 if __name__ == "__main__":
 
-    tdata = xPData(
+    tdata = xData(
         data=[np.eye(5)],
         header={'name': 'testdata', 'description': 'Some data description'},
         meta={'mean_data[0]': 5}
     )
 
     tdata.data.append(
-        xPData(
-            [xPData('a', header={'name': 'deepest'}),
-             xPData(1241, header={'name': 'deepest2'}),
-             xPData({'a': 'b'}, header={'name': 'deepest3'}),
+        xData(
+            [xData('a', header={'name': 'deepest'}),
+             xData(1241, header={'name': 'deepest2'}),
+             xData({'a': 'b'}, header={'name': 'deepest3'}),
              ],
             header={'name': 'nesting'})
     )
@@ -636,15 +651,15 @@ if __name__ == "__main__":
     tdata.__dict__
 
     tdata.data.append(
-        xPData('124', name='notsodeep'),
+        xData('124', name='notsodeep'),
     )
 
     tdata.data.append(
-        xPData([1, 2], name='notsodeep2'),
+        xData([1, 2], name='notsodeep2'),
     )
 
-    tdata_long_list = xPData(
-        data=[xPData(i, name=f"some_name_{i}") for i in range(10)],
+    tdata_long_list = xData(
+        data=[xData(i, name=f"some_name_{i}") for i in range(10)],
         header={'name': 'testdata', 'description': 'Some data description'},
         meta={'mean_data[0]': 5}
 
@@ -653,8 +668,8 @@ if __name__ == "__main__":
     chk_list = CheckedList([], tdata)
     chk_list.append('a')
     assert chk_list == ['a']
-    chk_list.append(xPData(None, header={'name': 'deepest'}))
-    tdata.data.append(xPData(None, header={'name': 'deepest'}))
+    chk_list.append(xData(None, header={'name': 'deepest'}))
+    tdata.data.append(xData(None, header={'name': 'deepest'}))
 
     # tested with methodtools.lru_cache
     # In [31]: %timeit tdata.get_by_name('testdata')

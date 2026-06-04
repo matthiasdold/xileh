@@ -1,0 +1,53 @@
+---
+title: "Contributing"
+---
+
+## Development setup
+
+```bash
+git clone git@github.com:bsdlab/xileh.git
+cd xileh
+uv sync --extra all
+```
+
+## Branching model
+
+- `main` — stable, released code. Documentation and PyPI publishing trigger
+  off this branch.
+- `develop` — integration branch for ongoing work.
+- Feature branches — `feature/<name>`, `fix/<name>`, etc., branched off
+  `develop` (or `main` for hotfixes), merged back via pull request.
+
+## Commit messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` a new feature
+- `fix:` a bug fix
+- `docs:` documentation only
+- `test:` adding or fixing tests
+- `refactor:` code change that neither fixes a bug nor adds a feature
+- `chore:` tooling / packaging changes
+
+## Running checks
+
+```bash
+# tests with coverage
+uv run --extra dev pytest tests/ -v --cov=src/xileh
+
+# lint
+uv run --extra dev ruff check src/ tests/
+```
+
+## Code style
+
+- NumPy-style docstrings for public functions and classes.
+- Type hints on function signatures.
+- Keep changes surgical; prefer established libraries over custom code.
+
+## Releasing
+
+1. Bump `version` in `pyproject.toml`.
+2. Tag the commit: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. The `publish-pypi` workflow builds and publishes to PyPI via OIDC trusted
+   publishing.
