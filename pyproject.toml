@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xileh"
-version = "0.3.1"
+version = "0.3.2"
 authors = [{ name = "Matthias Dold", email = "matthias.dold@gmx.net" }]
 description = "A lightweight, composable pipeline abstraction built around a hierarchical data container."
 readme = "README.md"
