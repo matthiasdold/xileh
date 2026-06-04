@@ -11,6 +11,14 @@ class NotEqual(Exception):
     pass
 
 
+def _is_polars(obj):
+    try:
+        import polars as pl
+    except ImportError:
+        return False
+    return isinstance(obj, (pl.DataFrame, pl.Series))
+
+
 def _compare_container(obj_1, obj_2, key=""):
     """For handling comparison of nested unknown data types. Raises NotEqual
     when obj_1 & obj_2 do
@@ -96,7 +104,10 @@ def _compare_container(obj_1, obj_2, key=""):
                     raise NotEqual(f'KeyError with dict:{key=}, {k=}')
 
     elif isinstance(obj_1, (pd.DataFrame, pd.Series)):
-        _compare_container(obj_1.values, obj_2.values)
+        _compare_container(np.asarray(obj_1), np.asarray(obj_2))
+
+    elif _is_polars(obj_1):
+        _compare_container(obj_1.to_numpy(), obj_2.to_numpy())
 
     elif isinstance(obj_1, datetime):
         # use utctimetuple which compares down to seconds -> precise enough

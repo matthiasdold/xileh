@@ -13,7 +13,7 @@ pip install xileh
 ## From source
 
 ```bash
-git clone git@github.com:bsdlab/xileh.git
+git clone git@github.com:matthiasdold/xileh.git
 cd xileh
 pip install .
 # or, for an editable install during development:

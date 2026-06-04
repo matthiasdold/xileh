@@ -1,5 +1,10 @@
 # xileh
 
+![CI](https://github.com/matthiasdold/xileh/workflows/CI%20Testing/badge.svg?branch=main)
+[![codecov](https://codecov.io/gh/matthiasdold/xileh/branch/main/graph/badge.svg)](https://codecov.io/gh/matthiasdold/xileh)
+![Tests](https://img.shields.io/badge/tests-46%20passed-brightgreen)
+![Python](https://img.shields.io/badge/python-3.11+-blue)
+
 A lightweight, composable pipeline abstraction built around a hierarchical
 data container.
 
@@ -44,10 +49,21 @@ single source of truth but impose a format that can hinder rapid prototyping.
 pip install xileh
 ```
 
+The bare install is **lite** (numpy only). Optional data backends are
+available as extras:
+
+```bash
+pip install xileh[pandas]   # pandas DataFrame/Series save & load (parquet)
+pip install xileh[polars]   # polars DataFrame/Series save & load (parquet)
+```
+
+Saving or loading a container that holds a backend-specific type without the
+corresponding extra installed raises an error pointing at the extra to install.
+
 Or from source:
 
 ```bash
-git clone git@github.com:bsdlab/xileh.git
+git clone git@github.com:matthiasdold/xileh.git
 cd xileh
 pip install -e .
 ```
@@ -79,7 +95,7 @@ pl.eval(root)
 
 Full documentation, including a quick-start guide, worked examples, and the API
 reference, is available at
-**[bsdlab.github.io/xileh](https://bsdlab.github.io/xileh/)**.
+**[matthiasdold.github.io/xileh](https://matthiasdold.github.io/xileh/)**.
 
 ## License
 

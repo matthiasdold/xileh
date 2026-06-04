@@ -5,8 +5,8 @@ project:
 website:
   title: "xileh"
   description: "A lightweight, composable pipeline abstraction"
-  site-url: "https://bsdlab.github.io/xileh"
-  repo-url: "https://github.com/bsdlab/xileh"
+  site-url: "https://matthiasdold.github.io/xileh"
+  repo-url: "https://github.com/matthiasdold/xileh"
   repo-actions: [edit, issue]
 
   navbar:
@@ -29,7 +29,7 @@ website:
             file: docs/guide/contributing.qmd
     right:
       - icon: github
-        href: "https://github.com/bsdlab/xileh"
+        href: "https://github.com/matthiasdold/xileh"
         aria-label: GitHub
 
   sidebar:
@@ -48,7 +48,7 @@ website:
       Made with [Quarto](https://quarto.org/)
     right:
       - icon: github
-        href: "https://github.com/bsdlab/xileh"
+        href: "https://github.com/matthiasdold/xileh"
         aria-label: GitHub
 
 format:

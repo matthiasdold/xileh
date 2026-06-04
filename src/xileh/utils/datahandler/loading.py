@@ -13,8 +13,8 @@ import yaml
 
 # Note that during saving all types are saved from the root module with full
 # name -> so no pd or np aliases for recreation
+import importlib
 import pathlib
-import pandas
 import numpy
 
 from pathlib import Path
@@ -26,19 +26,77 @@ from warnings import warn
 
 
 def load_pandas(fname: Path):
-    return pandas.read_hdf(fname)
+    import pandas
+    return pandas.read_parquet(fname)
+
+
+def load_pandas_series(fname: Path):
+    # stored as a single-column frame by ``pandas_saver`` -> squeeze back
+    import pandas
+    return pandas.read_parquet(fname).iloc[:, 0]
+
+
+def load_polars(fname: Path):
+    import polars
+    return polars.read_parquet(fname)
+
+
+def load_polars_series(fname: Path):
+    # stored as a single-column frame by ``polars_saver`` -> squeeze back
+    import polars
+    return polars.read_parquet(fname).to_series(0)
 
 
 def load_numpy(fname: Path):
     return numpy.load(fname)
 
 
+# pandas and polars are optional backends (``pip install xileh[pandas]`` /
+# ``xileh[polars]``); their loaders are only registered when the backend is
+# importable. numpy/Path are always available.
 loaders_dict = {
-    pandas.DataFrame: load_pandas,
-    pandas.Series: load_pandas,
     numpy.ndarray: load_numpy,
     pathlib.Path: pathlib.Path,
 }
+
+try:
+    import pandas
+
+    loaders_dict[pandas.DataFrame] = load_pandas
+    loaders_dict[pandas.Series] = load_pandas_series
+except ImportError:
+    pass
+
+try:
+    import polars
+
+    loaders_dict[polars.DataFrame] = load_polars
+    loaders_dict[polars.Series] = load_polars_series
+except ImportError:
+    pass
+
+
+def _resolve_type(tp: str):
+    """Resolve a fully qualified type string to its class.
+
+    Replaces the previous ``eval(tp)`` lookup so that an absent optional
+    backend (e.g. pandas) produces an actionable error instead of a bare
+    ``NameError``.
+    """
+    module_name, _, qualname = tp.rpartition('.')
+    try:
+        obj = importlib.import_module(module_name) if module_name else None
+    except ImportError as exc:
+        root = (module_name or tp).split('.')[0]
+        raise ImportError(
+            f"Loading a container with data of type '{tp}' requires the"
+            f" optional '{root}' backend. Install it via"
+            f" `pip install xileh[{root}]`."
+        ) from exc
+
+    for attr in qualname.split('.') if obj is not None else [tp]:
+        obj = getattr(obj, attr)
+    return obj
 
 
 def get_loader(datatype):
@@ -46,7 +104,8 @@ def get_loader(datatype):
     tp = datatype.split(' ')[1].replace('>', '').replace("'", "")
 
     # check for an appropriate ancestor
-    loader = [v for k, v in loaders_dict.items() if issubclass(eval(tp), k)]
+    loader = [v for k, v in loaders_dict.items()
+              if issubclass(_resolve_type(tp), k)]
 
     # due to inheritance paths might return twice the same loader, get only unique          # noqa
     loader = list(set(loader))

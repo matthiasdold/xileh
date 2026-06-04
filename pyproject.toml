@@ -4,56 +4,58 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xileh"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{ name = "Matthias Dold", email = "matthias.dold@gmx.net" }]
 description = "A lightweight, composable pipeline abstraction built around a hierarchical data container."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-keywords = ["pipeline", "data-container", "signal-processing", "workflow"]
+keywords = ["pipeline", "data-container", "workflow"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Topic :: Scientific/Engineering",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy",
-    "pandas",
-    "tables",
-    "pyyaml",
-    "tqdm",
-    "rich",
-    "tomli-w",
+  "numpy",
+  "pyyaml",
+  "tqdm",
+  "rich",
+  "tomli-w",
 ]
 
 [project.optional-dependencies]
+# Optional data backends. `lite` is the default (bare) install and is an
+# explicit no-op alias for discoverability. `pandas` / `polars` add
+# DataFrame/Series saving + loading (parquet via pyarrow).
+lite = []
+pandas = ["pandas", "pyarrow"]
+polars = ["polars"]
 dev = ["pytest>=8.0.0", "pytest-cov>=5.0.0", "ruff", "ipython"]
 docs = [
-    "quartodoc",
-    "nbformat",
-    "nbclient",
-    "jupyter-cache",
-    "ipykernel",
-    "griffe<2.0.0",
+  "quartodoc",
+  "nbformat",
+  "nbclient",
+  "jupyter-cache",
+  "ipykernel",
+  "griffe<2.0.0",
 ]
 build = ["build", "twine"]
 examples = ["fire"]
-all = [
-    "xileh[dev,docs,build,examples]",
-]
+all = ["xileh[pandas,polars,dev,docs,build,examples]"]
 
 [project.urls]
-Homepage = "https://github.com/bsdlab/xileh"
-Documentation = "https://bsdlab.github.io/xileh/"
-Repository = "https://github.com/bsdlab/xileh"
-Issues = "https://github.com/bsdlab/xileh/issues"
-Changelog = "https://github.com/bsdlab/xileh/releases"
+Homepage = "https://github.com/matthiasdold/xileh"
+Documentation = "https://matthiasdold.github.io/xileh/"
+Repository = "https://github.com/matthiasdold/xileh"
+Issues = "https://github.com/matthiasdold/xileh/issues"
+Changelog = "https://github.com/matthiasdold/xileh/releases"
 
 [tool.setuptools.packages.find]
 where = ["src"]

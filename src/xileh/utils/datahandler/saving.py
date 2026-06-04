@@ -12,7 +12,6 @@ import shutil
 from pathlib import Path
 from functools import wraps
 
-import pandas as pd
 import numpy as np
 import tomli_w
 
@@ -97,11 +96,32 @@ def save_serializable(data, fname=Path()):
 
 @prepare_save
 def pandas_saver(data, fname=Path()):
-    """Store pandas data objects"""
+    """Store pandas DataFrame/Series objects as parquet.
 
-    # complete the prefix and store
-    fname = fname.parent.joinpath(fname.stem + "pandas.hdf")
-    data.to_hdf(fname, "group1")
+    A ``Series`` has no ``to_parquet``; it is stored as a single-column frame
+    and restored to a ``Series`` on load (see ``load_pandas``).
+    """
+    import pandas as pd
+
+    fname = fname.parent.joinpath(fname.stem + "pandas.parquet")
+    frame = data.to_frame() if isinstance(data, pd.Series) else data
+    frame.to_parquet(fname)
+
+    return {"extra_fname": str(fname), "type": str(type(data))}
+
+
+@prepare_save
+def polars_saver(data, fname=Path()):
+    """Store polars DataFrame/Series objects as parquet.
+
+    A ``Series`` is stored as a single-column frame and restored on load
+    (see ``load_polars``).
+    """
+    import polars as pl
+
+    fname = fname.parent.joinpath(fname.stem + "polars.parquet")
+    frame = data.to_frame() if isinstance(data, pl.Series) else data
+    frame.write_parquet(fname)
 
     return {"extra_fname": str(fname), "type": str(type(data))}
 
@@ -131,12 +151,30 @@ def transform_named_int(data, fname=Path()):
 
 
 # Note: types work as dict keys as well - nice
+# pandas and polars are optional backends (``pip install xileh[pandas]`` /
+# ``xileh[polars]``); their savers are only registered when the backend is
+# importable. The numpy/Path savers are always available as numpy is a core
+# dependency.
 non_serializeable_types = {
-    pd.core.frame.DataFrame: pandas_saver,
-    pd.core.series.Series: pandas_saver,
     np.ndarray: numpy_saver,
     Path: transform_paths,
 }
+
+try:
+    import pandas as pd
+
+    non_serializeable_types[pd.core.frame.DataFrame] = pandas_saver
+    non_serializeable_types[pd.core.series.Series] = pandas_saver
+except ImportError:
+    pass
+
+try:
+    import polars as pl
+
+    non_serializeable_types[pl.DataFrame] = polars_saver
+    non_serializeable_types[pl.Series] = polars_saver
+except ImportError:
+    pass
 
 
 def get_saver(data):
