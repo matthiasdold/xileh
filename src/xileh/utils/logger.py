@@ -15,19 +15,26 @@ import time
 import inspect
 import functools
 import logging
+import tempfile
+from pathlib import Path
 
 from xileh.utils.progress import tqdm
 
 FILE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 CONSOLE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
+DEFAULT_LOG_FILE = str(Path(tempfile.gettempdir()) / 'xileh.log')
+
 
 class DefaultLogger(logging.Logger):
 
     """ A conveniece class for logger initialization """
 
-    def __init__(self, name, log_file='/tmp'):
+    def __init__(self, name, log_file=DEFAULT_LOG_FILE):
         logging.Logger.__init__(self, name)
+
+        # ensure the target directory exists before opening the file handler
+        Path(log_file).parent.mkdir(parents=True, exist_ok=True)
 
         # adding a file and a channel handler
         fh = logging.FileHandler(log_file)
@@ -38,7 +45,7 @@ class DefaultLogger(logging.Logger):
         self.addHandler(sh)
 
 
-def xileh_log_this(custom_logger=None, log_file='/tmp/xileh.log'):
+def xileh_log_this(custom_logger=None, log_file=DEFAULT_LOG_FILE):
     """ Wrapper to decorate a pipeline function
 
     Note: We are using this to return a decorator with parameters for
