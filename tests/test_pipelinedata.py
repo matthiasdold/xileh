@@ -4,7 +4,6 @@
 # author: Matthias Dold
 # date: 2021-03-26
 
-import pdb
 import pytest
 import tempfile
 import numpy as np
@@ -16,57 +15,11 @@ from xileh.core.pipelinedata import CheckedList
 from xileh.core.pipelinedata import from_dict
 
 from tests.compare_utils import _compare_container
-from copy import deepcopy
-
-
-@pytest.fixture
-def get_test_data():
-    tdata = xPData(
-        data=np.eye(5),
-        header={'name': 'test_data',
-                'description': 'Some data description'},
-        meta={'mean': 5}
-    )
-    return tdata
-
-
-@pytest.fixture
-def get_nested_test_data():
-    tdata = xPData(
-        data=[
-            xPData(
-                data=[
-                    xPData(data=np.eye(3), header={'name': 'test'}),
-                    xPData(data=[1, 23, 4],
-                           header={'name': 'somename'})
-                ],
-                header={'name': 'first_level_child'},
-            ),
-            xPData(
-                data=[
-                    xPData(data=np.eye(4), header={'name': 'test2'}),
-                    xPData(data=[1, 23, 4],
-                           header={'name': 'somename2'})
-                ],
-                header={'name': 'string_nest_c'},
-            ),
-            xPData(
-                data=np.ones(3),
-                header={'name': 'search_target',
-                        'discription': 'We will search for this'}
-            ),
-            xPData(data=np.zeros(5), header={'name': 'not the target'})
-        ],
-        name='outer_container',
-        header={'description': 'A parent container without name'},
-        meta={'some_meta': [1, 2, 3]}
-    )
-    return tdata
 
 
 def test_init_meta():
     with pytest.raises(ValueError):
-        tdata = xPData(
+        xPData(
             data=np.eye(5),
             header={'name': 'test', 'description': 'Some data description'},
             meta={'mean': np.arange(3)}
@@ -330,7 +283,7 @@ def test_delete_from_main_list_and_add_new(get_nested_test_data):
 
     td.delete_by_name('first_level_child')
 
-    new = td.get_by_name('new_c', create_if_missing=True)
+    td.get_by_name('new_c', create_if_missing=True)
 
     # This will throw an error if new_c was not created as an attribute
     td.__getattribute__('new_c')
