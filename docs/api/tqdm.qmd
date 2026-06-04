@@ -1,0 +1,11 @@
+# tqdm { #xileh.utils.progress.tqdm }
+
+```python
+utils.progress.tqdm(*args, show_bar: bool = True, **kwargs)
+```
+
+tqdm wrapper with a ``show_bar`` kwarg and DISABLE_PROGRESS_BAR env var support.
+
+The bar is suppressed when either:
+- ``show_bar=False`` is passed, or
+- the environment variable ``DISABLE_PROGRESS_BAR`` is set to any non-empty value.

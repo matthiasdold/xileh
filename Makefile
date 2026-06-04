@@ -16,4 +16,5 @@ lint:
 	uv run --extra dev ruff check src/ tests/
 
 docs:
-	uv run --extra docs quarto render  # pre-render hook runs quartodoc build
+	uv run --extra docs quartodoc build --config _quartodoc.yml
+	quarto render

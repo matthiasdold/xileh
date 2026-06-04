@@ -15,25 +15,19 @@ quartodoc:
     display_name: relative
   sections:
     - title: Pipeline data container
-      desc: |
-        The hierarchical data container passed between processing steps.
-        [View source](https://github.com/bsdlab/xileh/blob/main/src/xileh/core/pipelinedata.py)
+      desc: "The hierarchical data container passed between processing steps"
       package: xileh.core.pipelinedata
       contents:
         - name: xData
         - name: from_dict
         - name: from_container
     - title: Pipeline
-      desc: |
-        Composable pipelines operating on xData containers.
-        [View source](https://github.com/bsdlab/xileh/blob/main/src/xileh/core/pipeline.py)
+      desc: "Composable pipelines operating on xData containers"
       package: xileh.core.pipeline
       contents:
         - name: xPipeline
     - title: Progress bars
-      desc: |
-        Rich-backed progress bar wrapper.
-        [View source](https://github.com/bsdlab/xileh/blob/main/src/xileh/utils/progress.py)
+      desc: "Rich-backed progress bar wrapper"
       package: xileh.utils.progress
       contents:
         - name: tqdm
