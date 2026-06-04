@@ -69,7 +69,20 @@ class xPipeline(object):
             contains (name, function)
         """
 
-        if len(step_foo) < 3:
+        assert len(step_foo) in (2, 3), (
+            "A step must be a (name, function) or (name, function, kwargs) "
+            f"tuple, got {len(step_foo)} elements: {step_foo}"
+        )
+        assert callable(step_foo[1]), (
+            f"The second step element must be the callable processing function,"
+            f" got {type(step_foo[1]).__name__}: {step_foo[1]}"
+        )
+        if len(step_foo) == 3:
+            assert isinstance(step_foo[2], dict), (
+                "The third step element must be a kwargs dict, got "
+                f"{type(step_foo[2]).__name__}: {step_foo[2]}"
+            )
+        else:
             step_foo = tuple(list(step_foo) + [{}])
 
         return step_foo

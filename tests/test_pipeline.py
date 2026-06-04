@@ -152,6 +152,18 @@ def test_steps_setter_normalizes_kwargs(sample_pipeline, sample_data):
                 if k.startswith('catch22__')]) == 23
 
 
+def test_step_without_function_raises(sample_pipeline):
+    # a (name, kwargs) step missing the function must fail early and clearly,
+    # not as a cryptic "'dict' object is not callable" inside eval
+    with pytest.raises(AssertionError):
+        sample_pipeline.add_step(('mystep', {'algo': 'c22'}))
+
+
+def test_step_with_non_dict_kwargs_raises(sample_pipeline):
+    with pytest.raises(AssertionError):
+        sample_pipeline.add_step(('mystep', create_features, 'not_a_dict'))
+
+
 def test_early_stop():
     """ An early stop would be signaled within the header of the xData """
     pdata = xData([], name='testing_data')
