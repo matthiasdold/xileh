@@ -1,0 +1,47 @@
+{
+  "docs/index.qmd": {
+    "index.html": "4b44f4fc"
+  },
+  "docs/guide/contributing.qmd": {
+    "contributing.html": "0d2e9afb"
+  },
+  "docs/guide/installation.qmd": {
+    "installation.html": "f305fd00"
+  },
+  "docs/guide/quickstart.qmd": {
+    "quickstart.html": "f54b6969"
+  },
+  "docs/examples/index.qmd": {
+    "index.html": "44de1f09"
+  },
+  "docs/examples/pipelinedata.qmd": {
+    "pipelinedata.html": "f1d68e98"
+  },
+  "docs/examples/pipelines.qmd": {
+    "pipelines.html": "9af22a5f"
+  },
+  "docs/api/bandfilter.qmd": {
+    "bandfilter.html": "1173048b"
+  },
+  "docs/api/from_container.qmd": {
+    "from_container.html": "be49beda"
+  },
+  "docs/api/from_dict.qmd": {
+    "from_dict.html": "beb246a8"
+  },
+  "docs/api/index.qmd": {
+    "index.html": "e8845131"
+  },
+  "docs/api/tqdm.qmd": {
+    "tqdm.html": "4d9384f8"
+  },
+  "docs/api/vectorized_filter.qmd": {
+    "vectorized_filter.html": "0dcd514b"
+  },
+  "docs/api/xData.qmd": {
+    "xData.html": "34e4481d"
+  },
+  "docs/api/xPipeline.qmd": {
+    "xPipeline.html": "58a835fd"
+  }
+}
