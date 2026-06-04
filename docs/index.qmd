@@ -8,9 +8,9 @@ a feature matrix `X` and target `y` to arbitrary, nested data structures.
 
 The library is built from two components:
 
-- [`xData`](docs/api/xData.qmd) — a hierarchical container holding *data*, a
+- [`xData`](api/xData.qmd) — a hierarchical container holding *data*, a
   *header* (description / control flags), and *meta* information.
-- [`xPipeline`](docs/api/xPipeline.qmd) — an ordered set of plain Python
+- [`xPipeline`](api/xPipeline.qmd) — an ordered set of plain Python
   functions that each take and return an `xData` object.
 
 ## Design philosophy
@@ -31,7 +31,7 @@ pipeline, over any data.
 
 ## Where to next?
 
-- [Installation](docs/guide/installation.qmd)
-- [Quick Start](docs/guide/quickstart.qmd)
-- [Examples](docs/examples/index.qmd)
-- [API Reference](docs/api/index.qmd)
+- [Installation](guide/installation.qmd)
+- [Quick Start](guide/quickstart.qmd)
+- [Examples](examples/index.qmd)
+- [API Reference](api/index.qmd)

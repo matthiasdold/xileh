@@ -12,7 +12,8 @@ website:
   description: "A lightweight, composable pipeline abstraction"
   site-url: "https://bsdlab.github.io/xileh"
   repo-url: "https://github.com/bsdlab/xileh"
-  repo-actions: [edit, issue]
+  repo-branch: main
+  repo-actions: [edit, source, issue]
 
   navbar:
     background: "#343a40"
