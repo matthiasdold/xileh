@@ -261,10 +261,10 @@ def save_non_serializable(v, fname):
 
 
 if __name__ == '__main__':
-    from xileh import xPData
+    from xileh import xData
     import numpy as np
-    pdata = xPData([xPData(np.ones(1000), name='some_numpy'),
-                    xPData('test', name='some_text')],
+    pdata = xData([xData(np.ones(1000), name='some_numpy'),
+                    xData('test', name='some_text')],
                    name='test_container')
 
     data = pdata._to_dict()

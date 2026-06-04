@@ -25,11 +25,11 @@ from warnings import warn
 # =============================================================================
 
 
-def load_pandas(fname):
+def load_pandas(fname: Path):
     return pandas.read_hdf(fname)
 
 
-def load_numpy(fname):
+def load_numpy(fname: Path):
     return numpy.load(fname)
 
 
@@ -121,7 +121,7 @@ def load_extra_data(v, froot: Path):
         return v
 
 
-def load_container(fname, serializeable_only=False):
+def load_container(fname: str | Path, serializeable_only: bool = False):
     """ Load the container at the path = fname """
 
     fname = Path(fname).resolve()

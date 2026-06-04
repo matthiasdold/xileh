@@ -16,7 +16,7 @@ import inspect
 import functools
 import logging
 
-from tqdm import tqdm
+from xileh.utils.progress import tqdm
 
 FILE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 CONSOLE_FORMAT = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")

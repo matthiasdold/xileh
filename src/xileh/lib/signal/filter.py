@@ -9,7 +9,7 @@
 import numpy as np
 from scipy import signal
 
-from xileh.core.pipelinedata import xPData
+from xileh.core.pipelinedata import xData
 from xileh.core.pipeline import xPipeline
 
 
@@ -20,7 +20,7 @@ def bandfilter(pdata, src_container='', mode='append',
 
     Parameters
     ----------
-    pdata : xPData
+    pdata : xData
         the data container to hand over
     src_container : str
         name of container to work with
@@ -28,7 +28,7 @@ def bandfilter(pdata, src_container='', mode='append',
         whether to modify the container or append a suffixed version
     suffix : str
         suffix to use if mode=append
-    lfilter_cfg_container : xPData
+    lfilter_cfg_container : xData
         container for the filter config, containing a, b, zi
     store_filter_state : bool
         whether or not to write zi back to the storage container
@@ -37,7 +37,7 @@ def bandfilter(pdata, src_container='', mode='append',
 
     Returns
     -------
-    pdata : xPData
+    pdata : xData
         the modified or appended container
     """
 
@@ -57,7 +57,7 @@ def bandfilter(pdata, src_container='', mode='append',
         # this is correct as we would only to append to a container that
         # is capable of append -> saves an extra "if" check
         pdata.data.append(
-            xPData(
+            xData(
                 np.empty(xc.data.shape),
                 header={'name': new_name},
             )
@@ -88,7 +88,7 @@ def downsample(pdata, src_container='', mode='append',
 
     Parameters
     ----------
-    pdata : xPData
+    pdata : xData
         the data container to hand over
     src_container : str
         name of container to work with
@@ -102,7 +102,7 @@ def downsample(pdata, src_container='', mode='append',
 
     Returns
     -------
-    pdata : xPData
+    pdata : xData
         the modified or appended container
     """
 
@@ -116,7 +116,7 @@ def downsample(pdata, src_container='', mode='append',
         # this is correct as we would only to append to a container that
         # is capable of append -> saves an extra "if" check
         pdata.data.append(
-            xPData(
+            xData(
                 np.empty(xc.data.shape),
                 header={'name': new_name},
                 meta={'downsampling_cfg': downsampling_cfg}
@@ -227,9 +227,9 @@ if __name__ == '__main__':
 
     # pack the data
 
-    pdata = xPData(
+    pdata = xData(
         [
-            xPData(x, header={'name': 'raw_data'})
+            xData(x, header={'name': 'raw_data'})
         ],
         header={'name': 'outer_container'}
     )
