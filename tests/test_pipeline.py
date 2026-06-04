@@ -135,6 +135,23 @@ def test_set_step_kwargs(sample_pipeline_filled):
         assert step[2][k] == v
 
 
+def test_eval_step_without_kwargs(sample_pipeline, sample_data):
+    # a step added as (name, func) without kwargs must run fine
+    sample_pipeline.add_step(('c22 extract', create_features))
+    sample_pipeline.eval(sample_data)
+    assert len([k for k in sample_data.meta.keys()
+                if k.startswith('catch22__')]) == 23
+
+
+def test_steps_setter_normalizes_kwargs(sample_pipeline, sample_data):
+    # assigning raw 2-tuples via the setter must still be evaluable
+    sample_pipeline.steps = [('c22 extract', create_features)]
+    assert all(len(s) == 3 for s in sample_pipeline.steps)
+    sample_pipeline.eval(sample_data)
+    assert len([k for k in sample_data.meta.keys()
+                if k.startswith('catch22__')]) == 23
+
+
 def test_early_stop():
     """ An early stop would be signaled within the header of the xData """
     pdata = xData([], name='testing_data')

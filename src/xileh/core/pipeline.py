@@ -69,7 +69,7 @@ class xPipeline(object):
             contains (name, function)
         """
 
-        if len(step_foo) < 3 and not isinstance(step_foo[-1], dict):
+        if len(step_foo) < 3:
             step_foo = tuple(list(step_foo) + [{}])
 
         return step_foo
@@ -155,7 +155,7 @@ class xPipeline(object):
 
     @steps.setter
     def steps(self, steps):
-        self._steps = steps
+        self._steps = [self.check_step_foo(s) for s in steps]
 
     def replace_step(self, name, step_foo):
         """ Replace a function given its name
@@ -209,7 +209,7 @@ class xPipeline(object):
                     break
 
                 foo = step[1]
-                kwargs = step[2]
+                kwargs = step[2] if len(step) > 2 else {}
                 pdata = foo(pdata, **kwargs)
         else:
             steps_iterator = tqdm(self._steps, position=0, leave=True)
@@ -222,8 +222,10 @@ class xPipeline(object):
 
                 steps_iterator.set_description(f"Processing step: {step[0]}")
 
+                kwargs = step[2] if len(step) > 2 else {}
+
                 n_of_m = f"{i + 1}/{len(self._steps)}"
-                msg = f"Eval step {n_of_m}: {step[0]} with kwargs = {step[2]}"
+                msg = f"Eval step {n_of_m}: {step[0]} with kwargs = {kwargs}"
 
                 if self.verbose:
                     tqdm.write(msg)
@@ -231,7 +233,6 @@ class xPipeline(object):
                     self._logger.info(msg)
 
                 foo = step[1]
-                kwargs = step[2]
                 pdata = foo(pdata, **kwargs)
 
                 if self._log_eval:
