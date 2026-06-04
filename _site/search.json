@@ -1,0 +1,541 @@
+[
+  {
+    "objectID": "docs/api/xPipeline.html",
+    "href": "docs/api/xPipeline.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference",
+      "Pipeline",
+      "xPipeline"
+    ]
+  },
+  {
+    "objectID": "docs/api/xPipeline.html#methods",
+    "href": "docs/api/xPipeline.html#methods",
+    "title": "",
+    "section": "Methods",
+    "text": "Methods\n\n\n\nName\nDescription\n\n\n\n\nadd_step\nAdd a processing step\n\n\nadd_steps\nAdd a processing steps\n\n\ncheck_step_foo\nCheck the tuple formulating a step function\n\n\neval\nRun all steps in self._steps\n\n\nget_step\nGet step by name\n\n\nremove_step\nRemove a step identified by the name\n\n\nremove_steps\nRemove a step identified by the name\n\n\nreplace_step\nReplace a function given its name\n\n\nset_step_kwargs\nUpdate the kwargs set for a particular step\n\n\n\n\nadd_step\ncore.pipeline.xPipeline.add_step(step_foo: tuple)\nAdd a processing step\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nstep_foo\ntuple(name, function, kwargs)\nname of the step, function which needs to be able to process a xData object and (optional) kwargs for this function\nrequired\n\n\n\n\n\n\nadd_steps\ncore.pipeline.xPipeline.add_steps(*steps)\nAdd a processing steps\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nsteps\ntuples(name, function, kwargs)\nname of the step, function which needs to be able to process a xData object and (optional) kwargs for this function\n()\n\n\n\n\n\n\ncheck_step_foo\ncore.pipeline.xPipeline.check_step_foo(step_foo)\nCheck the tuple formulating a step function\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nstep_foo\ntuple(name, function, kwargs)\nname of the step, function which needs to be able to process a xData object and (optional) kwargs for this function\nrequired\n\n\n\n\n\nReturns\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nstep_foo\ntuple(name, function, kwargs)\ntuple as input but with kwargs={} extended in case step_foo only contains (name, function)\n\n\n\n\n\n\neval\ncore.pipeline.xPipeline.eval(pdata: xData)\nRun all steps in self._steps\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npdata\npipelinedata.xData\nThe xData object to be processed\nrequired\n\n\n\n\n\nReturns\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\npdata : xData\nReturn the pipelined data after running through all steps\n\n\n\n\n\n\nget_step\ncore.pipeline.xPipeline.get_step(name)\nGet step by name\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nname\nstr\nstep name i.e first value of the step tuple\nrequired\n\n\n\n\n\nReturns\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nstep\ntuple(name, function, kwargs)\nthe selected processing step\n\n\nidx\nint\nindex of step within self._steps\n\n\n\n\n\n\nremove_step\ncore.pipeline.xPipeline.remove_step(name: str)\nRemove a step identified by the name\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nname\nstr\nname of the step to drop from self._steps\nrequired\n\n\n\n\n\n\nremove_steps\ncore.pipeline.xPipeline.remove_steps(names: list[str])\nRemove a step identified by the name\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nname\n\nnames of the steps to drop from self._steps\nrequired\n\n\n\n\n\n\nreplace_step\ncore.pipeline.xPipeline.replace_step(name, step_foo)\nReplace a function given its name\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nname\nstr\nstep name i.e first value of the step tuple\nrequired\n\n\nstep_foo\ntuple(name, function, kwargs)\nname of the step, function which needs to be able to process a xData object and (optional) kwargs for this function\nrequired\n\n\n\n\n\n\nset_step_kwargs\ncore.pipeline.xPipeline.set_step_kwargs(name, **kwargs)\nUpdate the kwargs set for a particular step",
+    "crumbs": [
+      "API Reference",
+      "Pipeline",
+      "xPipeline"
+    ]
+  },
+  {
+    "objectID": "docs/api/vectorized_filter.html",
+    "href": "docs/api/vectorized_filter.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference",
+      "Signal processing",
+      "vectorized_filter"
+    ]
+  },
+  {
+    "objectID": "docs/api/vectorized_filter.html#parameters",
+    "href": "docs/api/vectorized_filter.html#parameters",
+    "title": "",
+    "section": "Parameters",
+    "text": "Parameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\n(np.array, (ntimes, nchan))\ndata matrix\nrequired\n\n\nb\nnp.array\nfilter parameters b\nrequired\n\n\na\nnp.array\nfilter parameters a\nrequired\n\n\nzi\n(np.array, (max(len(a), len(b)) - 1, nchan))\nfilter states separate per channels\nrequired",
+    "crumbs": [
+      "API Reference",
+      "Signal processing",
+      "vectorized_filter"
+    ]
+  },
+  {
+    "objectID": "docs/api/vectorized_filter.html#returns",
+    "href": "docs/api/vectorized_filter.html#returns",
+    "title": "",
+    "section": "Returns:",
+    "text": "Returns:\nfdata : np.array, (ntimes, nchan)\n    the filtered data per channel\nzi : np.array, (max(len(a), len(b))-1, nchan)\n    the updated filter state",
+    "crumbs": [
+      "API Reference",
+      "Signal processing",
+      "vectorized_filter"
+    ]
+  },
+  {
+    "objectID": "docs/api/index.html",
+    "href": "docs/api/index.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "docs/api/index.html#pipeline-data-container",
+    "href": "docs/api/index.html#pipeline-data-container",
+    "title": "",
+    "section": "Pipeline data container",
+    "text": "Pipeline data container\nThe hierarchical data container passed between processing steps\n\n\n\nxData\nThe generalized pipeline data container\n\n\nfrom_dict\nGiven a dictionary representation of an xData object\n\n\nfrom_container\nLoad a container located at cpath",
+    "crumbs": [
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "docs/api/index.html#pipeline",
+    "href": "docs/api/index.html#pipeline",
+    "title": "",
+    "section": "Pipeline",
+    "text": "Pipeline\nComposable pipelines operating on xData containers\n\n\n\nxPipeline\nThe pipeline as a individual realization of",
+    "crumbs": [
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "docs/api/index.html#signal-processing",
+    "href": "docs/api/index.html#signal-processing",
+    "title": "",
+    "section": "Signal processing",
+    "text": "Signal processing\nExample domain-specific pipeline steps\n\n\n\nbandfilter\nThe bandfiltered info\n\n\nvectorized_filter\nThe scipy filter is only able of dealing with 1d vectors",
+    "crumbs": [
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "docs/api/index.html#progress-bars",
+    "href": "docs/api/index.html#progress-bars",
+    "title": "",
+    "section": "Progress bars",
+    "text": "Progress bars\nRich-backed progress bar wrapper\n\n\n\ntqdm\ntqdm wrapper with a show_bar kwarg and DISABLE_PROGRESS_BAR env var support.",
+    "crumbs": [
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "docs/api/from_container.html",
+    "href": "docs/api/from_container.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "from_container"
+    ]
+  },
+  {
+    "objectID": "docs/api/from_container.html#parameters",
+    "href": "docs/api/from_container.html#parameters",
+    "title": "",
+    "section": "Parameters",
+    "text": "Parameters\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\ncpath\nstr or pathlib.Path\npath to the container\nrequired",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "from_container"
+    ]
+  },
+  {
+    "objectID": "docs/api/from_container.html#returns",
+    "href": "docs/api/from_container.html#returns",
+    "title": "",
+    "section": "Returns",
+    "text": "Returns\n\n\n\nName\nType\nDescription\n\n\n\n\npdata\nxData\na pipelinedata container loaded from cpath",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "from_container"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html",
+    "href": "docs/examples/pipelines.html",
+    "title": "Pipelines",
+    "section": "",
+    "text": "A xPipeline is a concatenation of functions operating on xData objects.",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html#function-signature",
+    "href": "docs/examples/pipelines.html#function-signature",
+    "title": "Pipelines",
+    "section": "Function signature",
+    "text": "Function signature\nEvery pipeline function takes a single xData argument (plus any keyword arguments) and returns the (modified) container.\n\ndef add_data_entity(pdata, name=\"myname\", size=1):\n    \"\"\"Add a simple data entity to the container.\n\n    A valid pipeline function has exactly one positional argument, the xData\n    object being processed, and may have any number of keyword arguments\n    (which are logged alongside the pipeline step).\n    \"\"\"\n    pdata.add([1, 2, 3] * size, name=name)\n    # every pipeline function must return the pdata object, making explicit\n    # that it modifies and passes on the container\n    return pdata",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html#initialization",
+    "href": "docs/examples/pipelines.html#initialization",
+    "title": "Pipelines",
+    "section": "Initialization",
+    "text": "Initialization\n\nfrom xileh import xData, xPipeline\n\npl = xPipeline(\"test_pipeline\", silent=True)\npl.add_steps(\n    (\"add_to_data\", add_data_entity),\n    (\"add_to_data_2\", add_data_entity, {\"name\": \"another_test\"}),\n)\npl\n\n&lt;xileh.core.pipeline.xPipeline object at 0x1041720d0&gt;\nPipeline name: test_pipeline\nSteps: \n    -&gt; 'add_to_data'\n    -&gt; 'add_to_data_2'\n\n\nThe internal step list holds tuples of (name, function, kwargs):\n\npl.steps\n\n[('add_to_data',\n  &lt;function __main__.add_data_entity(pdata, name='myname', size=1)&gt;,\n  {}),\n ('add_to_data_2',\n  &lt;function __main__.add_data_entity(pdata, name='myname', size=1)&gt;,\n  {'name': 'another_test'})]\n\n\nA single step can be looked up by name:\n\npl.get_step(\"add_to_data_2\")\n\n(('add_to_data_2',\n  &lt;function __main__.add_data_entity(pdata, name='myname', size=1)&gt;,\n  {'name': 'another_test'}),\n 1)",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html#evaluating",
+    "href": "docs/examples/pipelines.html#evaluating",
+    "title": "Pipelines",
+    "section": "Evaluating",
+    "text": "Evaluating\n\npdata = xData([], name=\"outercontainer\")\npl.eval(pdata)\npdata.get_container_names()\n\n['outercontainer', 'myname', 'another_test']",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html#modifying-steps",
+    "href": "docs/examples/pipelines.html#modifying-steps",
+    "title": "Pipelines",
+    "section": "Modifying steps",
+    "text": "Modifying steps\n\ndef foo(pdata, k=\"abc\"):\n    return pdata\n\n\n# replace a step entirely\npl.replace_step(\"add_to_data\", (\"new_step\", foo))\n\n# update the kwargs of a step\npl.add_steps((\"test_step\", foo))\npl.set_step_kwargs(\"test_step\", k=\"cde\")\n\n# remove steps\npl.remove_step(\"new_step\")\npl.remove_steps([\"add_to_data_2\"])\npl\n\n&lt;xileh.core.pipeline.xPipeline object at 0x1041720d0&gt;\nPipeline name: test_pipeline\nSteps: \n    -&gt; 'test_step'",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html#composing-pipelines",
+    "href": "docs/examples/pipelines.html#composing-pipelines",
+    "title": "Pipelines",
+    "section": "Composing pipelines",
+    "text": "Composing pipelines\nBecause steps are plain tuples, pipelines compose by splatting another pipeline’s steps:\n\ndef print_foo(pdata):\n    for name in pdata.get_container_names():\n        print(f\"{name} - {pdata[name].data}\")\n    return pdata\n\n\ncombined = xPipeline(\"combined\", silent=True)\ncombined.add_steps(\n    (\"print_before\", print_foo),\n    *pl.steps,\n    (\"print_after\", print_foo),\n)\ncombined\n\n&lt;xileh.core.pipeline.xPipeline object at 0x104190750&gt;\nPipeline name: combined\nSteps: \n    -&gt; 'print_before'\n    -&gt; 'test_step'\n    -&gt; 'print_after'",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelines.html#early-stopping",
+    "href": "docs/examples/pipelines.html#early-stopping",
+    "title": "Pipelines",
+    "section": "Early stopping",
+    "text": "Early stopping\nA pipeline function can short-circuit the remaining steps by setting early_stop in the container header (e.g. when loading data finds nothing):\npdata.header[\"early_stop\"] = True",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipelines"
+    ]
+  },
+  {
+    "objectID": "docs/examples/index.html",
+    "href": "docs/examples/index.html",
+    "title": "Examples",
+    "section": "",
+    "text": "Worked examples of the two core concepts:\n\nPipeline data — building, accessing, mutating, and persisting xData containers.\nPipelines — composing, inspecting, and evaluating xPipeline objects.",
+    "crumbs": [
+      "Examples"
+    ]
+  },
+  {
+    "objectID": "docs/guide/installation.html",
+    "href": "docs/guide/installation.html",
+    "title": "Installation",
+    "section": "",
+    "text": "xileh targets Python 3.11+."
+  },
+  {
+    "objectID": "docs/guide/installation.html#from-pypi",
+    "href": "docs/guide/installation.html#from-pypi",
+    "title": "Installation",
+    "section": "From PyPI",
+    "text": "From PyPI\npip install xileh"
+  },
+  {
+    "objectID": "docs/guide/installation.html#from-source",
+    "href": "docs/guide/installation.html#from-source",
+    "title": "Installation",
+    "section": "From source",
+    "text": "From source\ngit clone git@github.com:bsdlab/xileh.git\ncd xileh\npip install .\n# or, for an editable install during development:\npip install -e ."
+  },
+  {
+    "objectID": "docs/guide/installation.html#development-environment",
+    "href": "docs/guide/installation.html#development-environment",
+    "title": "Installation",
+    "section": "Development environment",
+    "text": "Development environment\nThe project uses uv for dependency management. To set up a development environment with all optional groups:\nuv sync --extra all\nOptional dependency groups:\n\ndev — pytest, pytest-cov, ruff, ipython\ndocs — Quarto / quartodoc documentation tooling\nbuild — build, twine for packaging\nall — everything above"
+  },
+  {
+    "objectID": "docs/index.html",
+    "href": "docs/index.html",
+    "title": "xileh",
+    "section": "",
+    "text": "xileh is a lightweight, composable pipeline abstraction built around a hierarchical data container. It generalizes the sklearn.Pipeline idea beyond a feature matrix X and target y to arbitrary, nested data structures.\nThe library is built from two components:"
+  },
+  {
+    "objectID": "docs/index.html#design-philosophy",
+    "href": "docs/index.html#design-philosophy",
+    "title": "xileh",
+    "section": "Design philosophy",
+    "text": "Design philosophy\nxileh deliberately aims to:\n\nimpose as few restrictions on your workflow as possible (arbitrary data objects and plain Python functions),\nintegrate easily with a function-based workflow during development,\nprovide a single source of truth for the processing,\nenable reuse of whole pipelines by strongly motivating composition.\n\nTake sklearn.Pipeline as the motivating example: it is great for building, storing, and evaluating ML pipelines, but it is specific about the shape of data it processes and how (fit / transform). xileh trades built-in functionality for maximal freedom: a single object describing the full pipeline, over any data."
+  },
+  {
+    "objectID": "docs/index.html#where-to-next",
+    "href": "docs/index.html#where-to-next",
+    "title": "xileh",
+    "section": "Where to next?",
+    "text": "Where to next?\n\nInstallation\nQuick Start\nExamples\nAPI Reference"
+  },
+  {
+    "objectID": "docs/guide/contributing.html",
+    "href": "docs/guide/contributing.html",
+    "title": "Contributing",
+    "section": "",
+    "text": "git clone git@github.com:bsdlab/xileh.git\ncd xileh\nuv sync --extra all"
+  },
+  {
+    "objectID": "docs/guide/contributing.html#development-setup",
+    "href": "docs/guide/contributing.html#development-setup",
+    "title": "Contributing",
+    "section": "",
+    "text": "git clone git@github.com:bsdlab/xileh.git\ncd xileh\nuv sync --extra all"
+  },
+  {
+    "objectID": "docs/guide/contributing.html#branching-model",
+    "href": "docs/guide/contributing.html#branching-model",
+    "title": "Contributing",
+    "section": "Branching model",
+    "text": "Branching model\n\nmain — stable, released code. Documentation and PyPI publishing trigger off this branch.\ndevelop — integration branch for ongoing work.\nFeature branches — feature/&lt;name&gt;, fix/&lt;name&gt;, etc., branched off develop (or main for hotfixes), merged back via pull request."
+  },
+  {
+    "objectID": "docs/guide/contributing.html#commit-messages",
+    "href": "docs/guide/contributing.html#commit-messages",
+    "title": "Contributing",
+    "section": "Commit messages",
+    "text": "Commit messages\nFollow Conventional Commits:\n\nfeat: a new feature\nfix: a bug fix\ndocs: documentation only\ntest: adding or fixing tests\nrefactor: code change that neither fixes a bug nor adds a feature\nchore: tooling / packaging changes"
+  },
+  {
+    "objectID": "docs/guide/contributing.html#running-checks",
+    "href": "docs/guide/contributing.html#running-checks",
+    "title": "Contributing",
+    "section": "Running checks",
+    "text": "Running checks\n# tests with coverage\nuv run --extra dev pytest tests/ -v --cov=src/xileh\n\n# lint\nuv run --extra dev ruff check src/ tests/"
+  },
+  {
+    "objectID": "docs/guide/contributing.html#code-style",
+    "href": "docs/guide/contributing.html#code-style",
+    "title": "Contributing",
+    "section": "Code style",
+    "text": "Code style\n\nNumPy-style docstrings for public functions and classes.\nType hints on function signatures.\nKeep changes surgical; prefer established libraries over custom code."
+  },
+  {
+    "objectID": "docs/guide/contributing.html#releasing",
+    "href": "docs/guide/contributing.html#releasing",
+    "title": "Contributing",
+    "section": "Releasing",
+    "text": "Releasing\n\nBump version in pyproject.toml.\nTag the commit: git tag vX.Y.Z && git push origin vX.Y.Z.\nThe publish-pypi workflow builds and publishes to PyPI via OIDC trusted publishing."
+  },
+  {
+    "objectID": "docs/guide/quickstart.html",
+    "href": "docs/guide/quickstart.html",
+    "title": "Quick Start",
+    "section": "",
+    "text": "This walks through the two core ideas: building an xData container and running an xPipeline over it."
+  },
+  {
+    "objectID": "docs/guide/quickstart.html#a-container",
+    "href": "docs/guide/quickstart.html#a-container",
+    "title": "Quick Start",
+    "section": "A container",
+    "text": "A container\n\nfrom xileh import xData\n\npdata = xData(\n    [\n        xData([1, 2, 3, 4], name=\"array_1\"),\n        xData(\"string\", name=\"string_1\"),\n    ],\n    name=\"outer_container\",\n)\npdata\n\nxData object at 0x10da0f810 - with size 24\nouter_container:    \n|   array_1:    list\n|   string_1:   &lt;class 'str'&gt;\n'--------------------\n\n\nContainers are accessed by name in three equivalent ways:\n\nassert pdata.get_by_name(\"array_1\") is pdata[\"array_1\"] is pdata.array_1\npdata[\"array_1\"].data\n\n[1, 2, 3, 4]"
+  },
+  {
+    "objectID": "docs/guide/quickstart.html#a-pipeline",
+    "href": "docs/guide/quickstart.html#a-pipeline",
+    "title": "Quick Start",
+    "section": "A pipeline",
+    "text": "A pipeline\nA pipeline step is any function that takes an xData and returns it.\n\nfrom xileh import xPipeline\n\n\ndef add_ones(pdata, name=\"ones\", size=3):\n    pdata.add([1] * size, name=name)\n    return pdata\n\n\npl = xPipeline(\"demo\", silent=True)\npl.add_steps(\n    (\"add_ones\", add_ones),\n    (\"add_more\", add_ones, {\"name\": \"more_ones\", \"size\": 5}),\n)\n\nroot = xData([], name=\"root\")\npl.eval(root)\nroot\n\nxData object at 0x11011ca50 - with size 24\nroot:   \n|   ones:   list\n|   more_ones:  list\n'--------------------\n\n\nxPData remains available as a backwards-compatible alias for xData.\nContinue with the pipeline data and pipelines examples for the full API."
+  },
+  {
+    "objectID": "docs/examples/pipelinedata.html",
+    "href": "docs/examples/pipelinedata.html",
+    "title": "Pipeline data",
+    "section": "",
+    "text": "The xData container has three elements:",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipeline data"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelinedata.html#initializing-a-container",
+    "href": "docs/examples/pipelinedata.html#initializing-a-container",
+    "title": "Pipeline data",
+    "section": "Initializing a container",
+    "text": "Initializing a container\n\nfrom xileh import xData\n\n# single data container -&gt; nothing can be added\npdata = xData(\"somedata\", name=\"mycontainer\")\n\n# a container that can be dynamically extended (data is a list)\npdata = xData([], name=\"mycontainer\")\n\n# with header data\npdata = xData([], name=\"cont1\", header={\"description\": \"some useful container\"})\n\n# nested initialization\npdata = xData(\n    [xData([1, 2, 3, 4], name=\"array_1\")],\n    name=\"outer_container_1\",\n)\npdata\n\nxData object at 0x10f354610 - with size 24\nouter_container_1:  \n|   array_1:    list\n'--------------------",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipeline data"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelinedata.html#get-and-set",
+    "href": "docs/examples/pipelinedata.html#get-and-set",
+    "title": "Pipeline data",
+    "section": "Get and set",
+    "text": "Get and set\n\nimport numpy as np\n\n# the three accessors are equivalent\nassert (\n    pdata.get_by_name(\"array_1\")\n    is pdata[\"array_1\"]\n    is pdata.array_1\n)\n\n# setting the .data attribute\npdata[\"array_1\"].data = np.ones(3)\npdata.array_1.data\n\narray([1., 1., 1.])\n\n\nWhole containers can be overwritten via the dict or attribute accessor:\n\npdata[\"array_1\"] = xData(np.zeros(3), name=\"array_1\")\npdata.array_1.data\n\narray([0., 0., 0.])",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipeline data"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelinedata.html#add-and-delete",
+    "href": "docs/examples/pipelinedata.html#add-and-delete",
+    "title": "Pipeline data",
+    "section": "Add and delete",
+    "text": "Add and delete\n\n# explicit, via get_by_name\nnewc = pdata.get_by_name(\"newcont\", create_if_missing=True)\nnewc.data = np.ones(5)\n\n# or more concise\npdata.add(np.ones(3), name=\"another\", header={\"description\": \"a few ones\"})\n\npdata.delete_by_name(\"newcont\")\npdata.get_container_names()\n\n['outer_container_1', 'array_1', 'another']",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipeline data"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelinedata.html#inspecting",
+    "href": "docs/examples/pipelinedata.html#inspecting",
+    "title": "Pipeline data",
+    "section": "Inspecting",
+    "text": "Inspecting\n\npdata.get_containers()  # alias: pdata.gc()\n\n{'outer_container_1': [{'array_1': numpy.ndarray}, {'another': numpy.ndarray}]}",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipeline data"
+    ]
+  },
+  {
+    "objectID": "docs/examples/pipelinedata.html#save-and-load",
+    "href": "docs/examples/pipelinedata.html#save-and-load",
+    "title": "Pipeline data",
+    "section": "Save and load",
+    "text": "Save and load\n\nimport tempfile\nfrom pathlib import Path\nfrom xileh.core.pipelinedata import from_container\n\nwith tempfile.TemporaryDirectory() as tmp:\n    fname = Path(tmp, \"test_container\")\n    pdata.save(fname)\n    reloaded = from_container(fname)\n\nreloaded\n\nxData object at 0x107eef8d0 - with size 24\nouter_container_1:  \n|   array_1:    &lt;class 'numpy.ndarray'&gt;\n|   another:    &lt;class 'numpy.ndarray'&gt;\n'--------------------",
+    "crumbs": [
+      "Examples",
+      "Core concepts",
+      "Pipeline data"
+    ]
+  },
+  {
+    "objectID": "docs/api/bandfilter.html",
+    "href": "docs/api/bandfilter.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference",
+      "Signal processing",
+      "bandfilter"
+    ]
+  },
+  {
+    "objectID": "docs/api/bandfilter.html#parameters",
+    "href": "docs/api/bandfilter.html#parameters",
+    "title": "",
+    "section": "Parameters",
+    "text": "Parameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\npdata\nxData\nthe data container to hand over\nrequired\n\n\nsrc_container\nstr\nname of container to work with\n''\n\n\nmode\n(str, (append, inplace))\nwhether to modify the container or append a suffixed version\n'append'\n\n\nsuffix\nstr\nsuffix to use if mode=append\n'bandfiltered'\n\n\nlfilter_cfg_container\nxData\ncontainer for the filter config, containing a, b, zi\n''\n\n\nstore_filter_state\nbool\nwhether or not to write zi back to the storage container effectively continuing with the last filter state on the next call\nTrue",
+    "crumbs": [
+      "API Reference",
+      "Signal processing",
+      "bandfilter"
+    ]
+  },
+  {
+    "objectID": "docs/api/bandfilter.html#returns",
+    "href": "docs/api/bandfilter.html#returns",
+    "title": "",
+    "section": "Returns",
+    "text": "Returns\n\n\n\nName\nType\nDescription\n\n\n\n\npdata\nxData\nthe modified or appended container",
+    "crumbs": [
+      "API Reference",
+      "Signal processing",
+      "bandfilter"
+    ]
+  },
+  {
+    "objectID": "docs/api/from_dict.html",
+    "href": "docs/api/from_dict.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "from_dict"
+    ]
+  },
+  {
+    "objectID": "docs/api/from_dict.html#parameters",
+    "href": "docs/api/from_dict.html#parameters",
+    "title": "",
+    "section": "Parameters",
+    "text": "Parameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nd\ndict\ndictionary representation of a xData object\nrequired",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "from_dict"
+    ]
+  },
+  {
+    "objectID": "docs/api/from_dict.html#returns",
+    "href": "docs/api/from_dict.html#returns",
+    "title": "",
+    "section": "Returns",
+    "text": "Returns\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\nxpd\nxData\nthe pipeline data instance according to the data in d",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "from_dict"
+    ]
+  },
+  {
+    "objectID": "docs/api/tqdm.html",
+    "href": "docs/api/tqdm.html",
+    "title": "",
+    "section": "",
+    "text": "Code\n\n\n\n\n\ntqdm\nutils.progress.tqdm(*args, show_bar: bool = True, **kwargs)\ntqdm wrapper with a show_bar kwarg and DISABLE_PROGRESS_BAR env var support.\nThe bar is suppressed when either: - show_bar=False is passed, or - the environment variable DISABLE_PROGRESS_BAR is set to any non-empty value.",
+    "crumbs": [
+      "API Reference",
+      "Progress bars",
+      "tqdm"
+    ]
+  },
+  {
+    "objectID": "docs/api/xData.html",
+    "href": "docs/api/xData.html",
+    "title": "",
+    "section": "",
+    "text": "Code",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "xData"
+    ]
+  },
+  {
+    "objectID": "docs/api/xData.html#methods",
+    "href": "docs/api/xData.html#methods",
+    "title": "",
+    "section": "Methods",
+    "text": "Methods\n\n\n\nName\nDescription\n\n\n\n\nadd\nConvenience alias creating a new container\n\n\ncopy\nCreate a copy of the container and return it. This method is\n\n\ndelete_by_name\nLook for a subcontainer with the given name and drop it\n\n\ngc\nConvenience alias for get_containers\n\n\nget_by_name\nTraverse the data container and look for a (sub) container\n\n\nget_container_names\nGet all container names\n\n\nget_containers\nReturn a dict of data entity names and types\n\n\noverwrite\nOverwrite data, header and meta of this container by\n\n\nrename\nChanges a containers name\n\n\nsave\nStore the container to a given folder name\n\n\n\n\nadd\ncore.pipelinedata.xData.add(\n    value,\n    name: str = '',\n    header: dict | None = None,\n    meta: dict | None = None,\n)\nConvenience alias creating a new container\n\n\ncopy\ncore.pipelinedata.xData.copy()\nCreate a copy of the container and return it. This method is convenience and helps to avoid issues which deepcopy encounters for copying nested structures\n\n\ndelete_by_name\ncore.pipelinedata.xData.delete_by_name(name)\nLook for a subcontainer with the given name and drop it\n\n\ngc\ncore.pipelinedata.xData.gc()\nConvenience alias for get_containers\n\n\nget_by_name\ncore.pipelinedata.xData.get_by_name(\n    name,\n    create_if_missing,\n    find_parent,\n    parent,\n)\nTraverse the data container and look for a (sub) container with the given name and return it if found\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nname\nstr\nname to look up in the data containers header dict\nrequired\n\n\ncreate_if_missing\nbool\nif no container is found, create a new one with the given name and append to the self.data if it is a list, else raise Error\nFalse\n\n\nfind_parent\nbool\nif true return the parent container instead\nFalse\n\n\nparent\nxileh.xData\na container to store the parent to be returned if find_parent is true. Used for recursive call of the method.\nNone\n\n\n\n\n\nReturns\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ndata : xData or None\nA data container with the given name or None if no container with the given name can be found\n\n\n\n\n\n\nget_container_names\ncore.pipelinedata.xData.get_container_names()\nGet all container names\n\n\nget_containers\ncore.pipelinedata.xData.get_containers()\nReturn a dict of data entity names and types\n\n\noverwrite\ncore.pipelinedata.xData.overwrite(new_pdata)\nOverwrite data, header and meta of this container by referencing to a “new_data” container\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nnew_pdata\nxData\na new container to overwrite this containers content\nrequired\n\n\n\n\n\n\nrename\ncore.pipelinedata.xData.rename(from_name, to_name)\nChanges a containers name\n\nParameters\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfrom_name\nstr\nname of the container to rename\nrequired\n\n\nto_name\nstr\nnew name of the container\nrequired\n\n\n\n\n\n\nsave\ncore.pipelinedata.xData.save(fname)\nStore the container to a given folder name\n\nParameters\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nfname\nstr or pathlib.Path\nfolder path and name to store the data to\nrequired",
+    "crumbs": [
+      "API Reference",
+      "Pipeline data container",
+      "xData"
+    ]
+  }
+]

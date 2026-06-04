@@ -1,0 +1,12 @@
+{
+  "hash": "e3fa3acd7f64b3158e1f9d7b9faead51",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: \"Quick Start\"\n---\n\nThis walks through the two core ideas: building an `xData` container and\nrunning an `xPipeline` over it.\n\n## A container\n\n::: {#4e545f03 .cell execution_count=1}\n``` {.python .cell-code}\nfrom xileh import xData\n\npdata = xData(\n    [\n        xData([1, 2, 3, 4], name=\"array_1\"),\n        xData(\"string\", name=\"string_1\"),\n    ],\n    name=\"outer_container\",\n)\npdata\n```\n\n::: {.cell-output .cell-output-display execution_count=1}\n```\nxData object at 0x10da0f810 - with size 24\nouter_container:\t\n|   array_1:\tlist\n|   string_1:\t<class 'str'>\n'--------------------\n```\n:::\n:::\n\n\nContainers are accessed by name in three equivalent ways:\n\n::: {#c2c8bf24 .cell execution_count=2}\n``` {.python .cell-code}\nassert pdata.get_by_name(\"array_1\") is pdata[\"array_1\"] is pdata.array_1\npdata[\"array_1\"].data\n```\n\n::: {.cell-output .cell-output-display execution_count=2}\n```\n[1, 2, 3, 4]\n```\n:::\n:::\n\n\n## A pipeline\n\nA pipeline step is any function that takes an `xData` and returns it.\n\n::: {#7a8d5d38 .cell execution_count=3}\n``` {.python .cell-code}\nfrom xileh import xPipeline\n\n\ndef add_ones(pdata, name=\"ones\", size=3):\n    pdata.add([1] * size, name=name)\n    return pdata\n\n\npl = xPipeline(\"demo\", silent=True)\npl.add_steps(\n    (\"add_ones\", add_ones),\n    (\"add_more\", add_ones, {\"name\": \"more_ones\", \"size\": 5}),\n)\n\nroot = xData([], name=\"root\")\npl.eval(root)\nroot\n```\n\n::: {.cell-output .cell-output-display execution_count=3}\n```\nxData object at 0x11011ca50 - with size 24\nroot:\t\n|   ones:\tlist\n|   more_ones:\tlist\n'--------------------\n```\n:::\n:::\n\n\n`xPData` remains available as a backwards-compatible alias for `xData`.\n\nContinue with the [pipeline data](../examples/pipelinedata.qmd) and\n[pipelines](../examples/pipelines.qmd) examples for the full API.\n\n",
+    "supporting": [
+      "quickstart_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}
