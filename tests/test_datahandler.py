@@ -1,4 +1,4 @@
-from tests.compare_utils import _compare_container
+from compare_utils import _compare_container
 
 from xileh.utils.datahandler.saving import save_to_folder
 from xileh.utils.datahandler.loading import (

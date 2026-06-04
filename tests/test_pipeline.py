@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from xileh.core.pipeline import xPipeline
-from xileh.core.pipelinedata import xPData
+from xileh.core.pipelinedata import xData
 from xileh.utils.logger import PlainLogger
 
 
@@ -16,7 +16,7 @@ def create_features(pdata, algo='C22'):
 
 @pytest.fixture
 def sample_data():
-    tdata = xPData(
+    tdata = xData(
         data=np.eye(5),
         header={'name': 'TestData',
                 'description': 'Some data description'},
@@ -136,11 +136,11 @@ def test_set_step_kwargs(sample_pipeline_filled):
 
 
 def test_early_stop():
-    """ An early stop would be signaled within the header of the xPData """
-    pdata = xPData([], name='testing_data')
-    pdata2 = xPData([], name='testing_data')
+    """ An early stop would be signaled within the header of the xData """
+    pdata = xData([], name='testing_data')
+    pdata2 = xData([], name='testing_data')
 
-    def add_data(pdata: xPData, nbr: str = "1", add_stop: bool = False):
+    def add_data(pdata: xData, nbr: str = "1", add_stop: bool = False):
         pdata.add(nbr, name=nbr)
 
         if add_stop:
