@@ -44,7 +44,7 @@ def test_default_decorator(xileh_logged_func):
     assert sig.parameters['logger'].default.name == 'default'
 
 
-def test_provide_custom_logging():
+def test_provide_custom_logging(tmp_path):
     @xileh_log_this(custom_logger=Logger('custom_logger'))
     def foo_with_custom_logger(logger=Logger('default')):
         return logger.name
@@ -53,16 +53,18 @@ def test_provide_custom_logging():
 
     # custom file only without custom logger -> else assume already set
     # in custom logger
-    @xileh_log_this(log_file='/tmp/testfile.log')
+    log_file = tmp_path / 'testfile.log'
+
+    @xileh_log_this(log_file=str(log_file))
     def foo_with_custom_log_dir_wo_logger(logger=Logger('default')):
         return logger
 
     logger = foo_with_custom_log_dir_wo_logger()
     assert isinstance(logger, DefaultLogger)
-    assert logger.handlers[0].stream.name == '/tmp/testfile.log'
+    assert logger.handlers[0].stream.name == str(log_file)
 
     @xileh_log_this(custom_logger=Logger('custom_logger'),
-                    log_file='/tmp/custom/file.log')
+                    log_file=str(tmp_path / 'custom' / 'file.log'))
     def foo_with_custom_log_dir_w_logger(logger=Logger('default')):
         return logger.name
 

@@ -10,16 +10,16 @@ import numpy as np
 
 from pathlib import Path
 
-from xileh.core.pipelinedata import xPData, from_container
+from xileh.core.pipelinedata import xData, from_container
 from xileh.core.pipelinedata import CheckedList
 from xileh.core.pipelinedata import from_dict
 
-from tests.compare_utils import _compare_container
+from compare_utils import _compare_container
 
 
 def test_init_meta():
     with pytest.raises(ValueError):
-        xPData(
+        xData(
             data=np.eye(5),
             header={'name': 'test', 'description': 'Some data description'},
             meta={'mean': np.arange(3)}
@@ -50,14 +50,14 @@ def test_header(get_test_data):
 
     # header needs to at least contain name
     with pytest.raises(AssertionError):
-        xPData(None, header={})
+        xData(None, header={})
 
 
 def test_get_by_name(get_nested_test_data):
     td = get_nested_test_data
 
     assert td.get_by_name('search_target') == td.data[2]
-    assert isinstance(td.get_by_name('new', create_if_missing=True), xPData)
+    assert isinstance(td.get_by_name('new', create_if_missing=True), xData)
     assert 'new' in td.get_container_names()
 
     assert td.get_by_name('somename',
@@ -87,7 +87,7 @@ def test_creation_via_new(get_nested_test_data):
 
 
 def test_checked_list():
-    tdata = xPData(None, header={'name': 'test'})
+    tdata = xData(None, header={'name': 'test'})
 
     assert CheckedList([1, 2, 3], tdata) == [1, 2, 3]
 
@@ -96,7 +96,7 @@ def test_checked_list():
     assert chk_list == ['a']
 
     with pytest.raises(KeyError):
-        chk_list.append(xPData([1, 2, 4], header={'name': 'test'}))
+        chk_list.append(xData([1, 2, 4], header={'name': 'test'}))
 
 
 def test_checked_list_container(get_nested_test_data):
@@ -108,7 +108,7 @@ def test_checked_list_container(get_nested_test_data):
 
 
 def test_name_attribute():
-    td = xPData(name='test')
+    td = xData(name='test')
 
     assert td.name == 'test'
     assert td.header['name'] == 'test'
@@ -118,12 +118,12 @@ def test_name_attribute():
     assert td.name == 'another name'
 
     # setting with header and name
-    td = xPData(header={'description': 'aaaa', 'somekey': 'somevalue'},
+    td = xData(header={'description': 'aaaa', 'somekey': 'somevalue'},
                 name='test')
 
     with pytest.raises(AssertionError):
-        td = xPData(header={'name': 'testing'}, name='testing')
-        td = xPData()   # should yield an error as no name is provided
+        td = xData(header={'name': 'testing'}, name='testing')
+        td = xData()   # should yield an error as no name is provided
 
 
 def test_create_if_missing(get_test_data):
@@ -134,7 +134,7 @@ def test_create_if_missing(get_test_data):
 
     td.data = []
     td2 = td.get_by_name('test_data2', create_if_missing=True)
-    assert isinstance(td2, xPData)
+    assert isinstance(td2, xData)
     assert len(td.get_container_names())
     assert td2.name == 'test_data2'
 
@@ -145,10 +145,10 @@ def test__to_dict(get_nested_test_data):
     dtd = td._to_dict()
 
     # we only have one outer container
-    assert len(list(dtd.keys())) == 2, "Dict of xPData should have 2 outer key"
+    assert len(list(dtd.keys())) == 2, "Dict of xData should have 2 outer key"
     assert list(dtd.keys())[0] == td.name, "Name missmatch"
     assert list(dtd.keys())[1] == 'datatype' and dtd['datatype'] == 'xPData', \
-        "Missing a type==xPData key:value pair"
+        "Missing a type==xData key:value pair"
 
     # lists conserved
     assert (len(dtd[td.name]['data']) == len(td.data)), "Data list missmatch"
@@ -194,7 +194,7 @@ def test_accessor(get_nested_test_data):
 def test_assignment(get_nested_test_data):
     pdata = get_nested_test_data
 
-    new_pdata = xPData([1, 2, 3, 'test'], name="newname",
+    new_pdata = xData([1, 2, 3, 'test'], name="newname",
                        meta={'some_meta': [1, 1, 1, 1]})
 
     pdata['test'] = new_pdata
@@ -253,7 +253,7 @@ def test_get_and_set_by_attribute(get_nested_test_data):
     assert td.search_target.data == 12345
 
     # -- adding a new container
-    newc = xPData([xPData([1241], name='newnest')], name='newcontainer')
+    newc = xData([xData([1241], name='newnest')], name='newcontainer')
     td.string_nest_c.somename2 = newc
     # --- setting will have copied the values over, so check by cannonic prop
     assert td.string_nest_c.somename2.data == newc.data

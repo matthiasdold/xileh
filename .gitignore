@@ -131,11 +131,7 @@ dmypy.json
 ./test_*
 
 # Quarto
-/_site/
 /.quarto/
-/_freeze/
-**/*.quarto_ipynb
-# quartodoc-generated API reference (built in CI)
-docs/api/
-docs/_sidebar.yml
 objects.json
+_site/
+**/*.quarto_ipynb

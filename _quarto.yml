@@ -1,11 +1,6 @@
 project:
   type: website
   output-dir: _site
-  render:
-    - docs/index.qmd
-    - docs/guide/*.qmd
-    - docs/examples/*.qmd
-    - docs/api/*.qmd
 
 website:
   title: "xileh"

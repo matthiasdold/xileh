@@ -26,12 +26,6 @@ quartodoc:
       package: xileh.core.pipeline
       contents:
         - name: xPipeline
-    - title: Signal processing
-      desc: "Example domain-specific pipeline steps"
-      package: xileh.lib.signal.filter
-      contents:
-        - name: bandfilter
-        - name: vectorized_filter
     - title: Progress bars
       desc: "Rich-backed progress bar wrapper"
       package: xileh.utils.progress

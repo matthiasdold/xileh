@@ -18,15 +18,6 @@ Composable pipelines operating on xData containers
 | --- | --- |
 | [xPipeline](xPipeline.qmd#xileh.core.pipeline.xPipeline) | The pipeline as a individual realization of |
 
-## Signal processing
-
-Example domain-specific pipeline steps
-
-| | |
-| --- | --- |
-| [bandfilter](bandfilter.qmd#xileh.lib.signal.filter.bandfilter) | The bandfiltered info |
-| [vectorized_filter](vectorized_filter.qmd#xileh.lib.signal.filter.vectorized_filter) | The scipy filter is only able of dealing with 1d vectors |
-
 ## Progress bars
 
 Rich-backed progress bar wrapper

@@ -23,7 +23,7 @@ by scipy's pipeline
 | [eval](#xileh.core.pipeline.xPipeline.eval) | Run all steps in self._steps |
 | [get_step](#xileh.core.pipeline.xPipeline.get_step) | Get step by name |
 | [remove_step](#xileh.core.pipeline.xPipeline.remove_step) | Remove a step identified by the name |
-| [remove_steps](#xileh.core.pipeline.xPipeline.remove_steps) | Remove a step identified by the name |
+| [remove_steps](#xileh.core.pipeline.xPipeline.remove_steps) | Remove multiple steps identified by their names |
 | [replace_step](#xileh.core.pipeline.xPipeline.replace_step) | Replace a function given its name |
 | [set_step_kwargs](#xileh.core.pipeline.xPipeline.set_step_kwargs) | Update the kwargs set for a particular step |
 
@@ -136,13 +136,13 @@ Remove a step identified by the name
 core.pipeline.xPipeline.remove_steps(names: list[str])
 ```
 
-Remove a step identified by the name
+Remove multiple steps identified by their names
 
 #### Parameters {.doc-section .doc-section-parameters}
 
-| Name   | Type   | Description                                 | Default    |
-|--------|--------|---------------------------------------------|------------|
-| name   |        | names of the steps to drop from self._steps | _required_ |
+| Name   | Type        | Description                                 | Default    |
+|--------|-------------|---------------------------------------------|------------|
+| names  | list\[str\] | names of the steps to drop from self._steps | _required_ |
 
 ### replace_step { #xileh.core.pipeline.xPipeline.replace_step }
 

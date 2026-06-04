@@ -24,7 +24,6 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
-    "scipy",
     "pandas",
     "tables",
     "pyyaml",
