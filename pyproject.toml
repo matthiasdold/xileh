@@ -44,8 +44,9 @@ docs = [
     "griffe<2.0.0",
 ]
 build = ["build", "twine"]
+examples = ["fire"]
 all = [
-    "xileh[dev,docs,build]",
+    "xileh[dev,docs,build,examples]",
 ]
 
 [project.urls]
