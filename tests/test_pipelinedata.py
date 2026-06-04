@@ -63,12 +63,16 @@ def test_get_by_name(get_nested_test_data):
     assert td.get_by_name('somename',
                           find_parent=True).name == 'first_level_child'
 
-    td.get_by_name('new')   # -> will cache the result
+    # missing container without create_if_missing raises KeyError
+    with pytest.raises(KeyError):
+        td.get_by_name('does_not_exist')
+
     td.delete_by_name('new')
     assert 'new' not in td.get_containers()
 
-    # test data also the cache is cleared
-    assert td.get_by_name('new') is None, "Deletion of did not clear cache"
+    # after deletion the lookup raises again
+    with pytest.raises(KeyError):
+        td.get_by_name('new')
 
 
 def test_creation_via_new(get_nested_test_data):
@@ -188,7 +192,8 @@ def test_accessor(get_nested_test_data):
         "Dict accessor failed after modifying via get_by_name"
 
     t.delete_by_name('somename')
-    assert t['somename'] is None, "Deletion failed with dict accessor"
+    with pytest.raises(KeyError):
+        t['somename']
 
 
 def test_assignment(get_nested_test_data):
