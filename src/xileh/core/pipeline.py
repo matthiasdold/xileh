@@ -162,6 +162,19 @@ class xPipeline(object):
 
         return step, idx
 
+    def __len__(self):
+        return len(self._steps)
+
+    def __getitem__(self, key):
+        selected = self._steps[key]
+        # integer index -> single step, wrap in list for uniform handling
+        if isinstance(key, int):
+            selected = [selected]
+        sub = xPipeline(self._name, verbose=self.verbose,
+                        silent=self._silent, log_eval=self._log_eval)
+        sub._steps = list(selected)
+        return sub
+
     @property
     def steps(self):
         return self._steps
