@@ -164,6 +164,47 @@ def test_step_with_non_dict_kwargs_raises(sample_pipeline):
         sample_pipeline.add_step(('mystep', create_features, 'not_a_dict'))
 
 
+def test_len(sample_pipeline_filled):
+    assert len(sample_pipeline_filled) == 3
+
+
+def test_getitem_slice_returns_pipeline(sample_pipeline_filled):
+    sub = sample_pipeline_filled[:2]
+    assert isinstance(sub, xPipeline)
+    assert len(sub) == 2
+    assert sub.steps[0][0] == 'c22 extract'
+    assert sub.steps[1][0] == 'c22 extract 2'
+
+
+def test_getitem_int_returns_single_step_pipeline(sample_pipeline_filled):
+    sub = sample_pipeline_filled[1]
+    assert isinstance(sub, xPipeline)
+    assert len(sub) == 1
+    assert sub.steps[0][0] == 'c22 extract 2'
+
+
+def test_getitem_negative_index(sample_pipeline_filled):
+    sub = sample_pipeline_filled[-1]
+    assert isinstance(sub, xPipeline)
+    assert sub.steps[0][0] == 'c22 extract 3'
+
+
+def test_getitem_preserves_settings():
+    pl = xPipeline('mypl', verbose=True, silent=True, log_eval=True)
+    pl.add_step(('s1', create_features))
+    pl.add_step(('s2', create_features))
+    sub = pl[:1]
+    assert sub._name == 'mypl'
+    assert sub.verbose is True
+    assert sub._silent is True
+    assert sub._log_eval is True
+
+
+def test_getitem_slice_is_evaluable(sample_pipeline_filled, sample_data):
+    sub = sample_pipeline_filled[:1]
+    sub.eval(sample_data)  # must not raise
+
+
 def test_early_stop():
     """ An early stop would be signaled within the header of the xData """
     pdata = xData([], name='testing_data')
