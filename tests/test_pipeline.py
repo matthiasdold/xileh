@@ -205,6 +205,67 @@ def test_getitem_slice_is_evaluable(sample_pipeline_filled, sample_data):
     sub.eval(sample_data)  # must not raise
 
 
+def test_steps_hash_initial_empty(sample_pipeline):
+    assert sample_pipeline.steps_hash == sample_pipeline._compute_steps_hash()
+
+
+def test_steps_hash_changes_on_add_step(sample_pipeline):
+    h0 = sample_pipeline.steps_hash
+    sample_pipeline.add_step(('s1', create_features))
+    assert sample_pipeline.steps_hash != h0
+
+
+def test_steps_hash_changes_on_remove_step(sample_pipeline):
+    sample_pipeline.add_step(('s1', create_features))
+    h1 = sample_pipeline.steps_hash
+    sample_pipeline.remove_step('s1')
+    assert sample_pipeline.steps_hash != h1
+
+
+def test_steps_hash_changes_on_replace_step(sample_pipeline):
+    sample_pipeline.add_step(('s1', create_features))
+    h1 = sample_pipeline.steps_hash
+
+    def other_fn(pdata):
+        return pdata
+
+    sample_pipeline.replace_step('s1', ('s1', other_fn))
+    assert sample_pipeline.steps_hash != h1
+
+
+def test_steps_hash_changes_on_set_step_kwargs(sample_pipeline):
+    sample_pipeline.add_step(('s1', create_features, {'algo': 'A'}))
+    h1 = sample_pipeline.steps_hash
+    sample_pipeline.set_step_kwargs('s1', algo='B')
+    assert sample_pipeline.steps_hash != h1
+
+
+def test_steps_hash_changes_on_steps_setter(sample_pipeline):
+    h0 = sample_pipeline.steps_hash
+    sample_pipeline.steps = [('s1', create_features)]
+    assert sample_pipeline.steps_hash != h0
+
+
+@pytest.mark.parametrize('kwargs1,kwargs2,expect_equal', [
+    ({'algo': 'A'}, {'algo': 'A'}, True),
+    ({'algo': 'A'}, {'algo': 'B'}, False),
+])
+def test_steps_hash_same_steps_same_hash(kwargs1, kwargs2, expect_equal):
+    pl1 = xPipeline('p1')
+    pl2 = xPipeline('p2')
+    pl1.add_step(('s1', create_features, kwargs1))
+    pl2.add_step(('s1', create_features, kwargs2))
+    assert (pl1.steps_hash == pl2.steps_hash) is expect_equal
+
+
+def test_steps_hash_order_matters():
+    pl1 = xPipeline('p1')
+    pl2 = xPipeline('p2')
+    pl1.add_steps(('s1', create_features), ('s2', create_features))
+    pl2.add_steps(('s2', create_features), ('s1', create_features))
+    assert pl1.steps_hash != pl2.steps_hash
+
+
 def test_early_stop():
     """ An early stop would be signaled within the header of the xData """
     pdata = xData([], name='testing_data')

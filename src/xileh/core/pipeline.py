@@ -7,6 +7,7 @@
 #
 # The pipeline implementations
 
+import hashlib
 import numpy as np
 
 from xileh.utils.progress import tqdm
@@ -15,15 +16,19 @@ from xileh.utils.logger import PlainLogger
 
 
 class xPipeline(object):
-
-    """ The pipeline as a individual realization of
+    """The pipeline as a individual realization of
     processing steps and data -> strongly motivated
     by scipy's pipeline
     """
 
-    def __init__(self, name: str, verbose: bool = False, silent: bool = False,
-                 log_eval: bool = False):
-        """ Setup with just populating the name for now
+    def __init__(
+        self,
+        name: str,
+        verbose: bool = False,
+        silent: bool = False,
+        log_eval: bool = False,
+    ):
+        """Setup with just populating the name for now
 
         Parameters
         ----------
@@ -39,22 +44,41 @@ class xPipeline(object):
         """
         self._name = name
         self._steps = []
+        self._steps_hash = self._compute_steps_hash()
         self.verbose = verbose
         self._logger = PlainLogger(name + ".log")
         self._log_eval = log_eval
         self._silent = silent
 
     def __repr__(self):
-        """ Show name of repl call """
-        return (super().__repr__() + f"\nPipeline name: {self._name}"
-                + "\nSteps: " + self.pretty_print_get_steps())
+        """Show name of repl call"""
+        return (
+            super().__repr__()
+            + f"\nPipeline name: {self._name}"
+            + "\nSteps: "
+            + self.pretty_print_get_steps()
+        )
+
+    def _compute_steps_hash(self) -> str:
+        parts = [
+            f"{s[0]}:{s[1].__name__}:{str(s[2]) if len(s) > 2 else '{}'}"
+            for s in self._steps
+        ]
+        return hashlib.md5("|".join(parts).encode()).hexdigest()
+
+    def _update_hash(self):
+        self._steps_hash = self._compute_steps_hash()
+
+    @property
+    def steps_hash(self) -> str:
+        return self._steps_hash
 
     def pretty_print_get_steps(self):
         step_names = [f"'{s[0]}'" for s in self._steps]
-        return '\n\t-> ' + '\n\t-> '.join(step_names)
+        return "\n\t-> " + "\n\t-> ".join(step_names)
 
     def check_step_foo(self, step_foo):
-        """ Check the tuple formulating a step function
+        """Check the tuple formulating a step function
 
         Parameters
         ----------
@@ -88,7 +112,7 @@ class xPipeline(object):
         return step_foo
 
     def add_step(self, step_foo: tuple):
-        """ Add a processing step
+        """Add a processing step
 
         Parameters
         ----------
@@ -98,14 +122,16 @@ class xPipeline(object):
         """
 
         # check that name is not yet used
-        assert all([step_foo[0] != t[0] for t in self._steps]), "Name already"\
-            " in pipeline steps names"
+        assert all([step_foo[0] != t[0] for t in self._steps]), (
+            "Name already in pipeline steps names"
+        )
         step_foo = self.check_step_foo(step_foo)
 
         self._steps.append(step_foo)
+        self._update_hash()
 
     def add_steps(self, *steps):
-        """ Add a processing steps
+        """Add a processing steps
 
         Parameters
         ----------
@@ -127,6 +153,7 @@ class xPipeline(object):
         """
 
         self._steps = [t for t in self._steps if t[0] != name]
+        self._update_hash()
 
     def remove_steps(self, names: list[str]):
         """Remove multiple steps identified by their names
@@ -157,8 +184,7 @@ class xPipeline(object):
             index of step within self._steps
         """
 
-        step, idx = [(t, i) for i, t in enumerate(self._steps)
-                     if t[0] == name][0]
+        step, idx = [(t, i) for i, t in enumerate(self._steps) if t[0] == name][0]
 
         return step, idx
 
@@ -170,8 +196,12 @@ class xPipeline(object):
         # integer index -> single step, wrap in list for uniform handling
         if isinstance(key, int):
             selected = [selected]
-        sub = xPipeline(self._name, verbose=self.verbose,
-                        silent=self._silent, log_eval=self._log_eval)
+        sub = xPipeline(
+            self._name,
+            verbose=self.verbose,
+            silent=self._silent,
+            log_eval=self._log_eval,
+        )
         sub._steps = list(selected)
         return sub
 
@@ -182,9 +212,10 @@ class xPipeline(object):
     @steps.setter
     def steps(self, steps):
         self._steps = [self.check_step_foo(s) for s in steps]
+        self._update_hash()
 
     def replace_step(self, name, step_foo):
-        """ Replace a function given its name
+        """Replace a function given its name
 
         Parameters
         ----------
@@ -200,17 +231,19 @@ class xPipeline(object):
         step_foo = self.check_step_foo(step_foo)
 
         self._steps[idx] = step_foo
+        self._update_hash()
 
     def set_step_kwargs(self, name, **kwargs):
-        """ Update the kwargs set for a particular step """
+        """Update the kwargs set for a particular step"""
 
         step, idx = self.get_step(name)
 
         # tuple is unmuteable, but the dictionary at step[2] is muteable
         step[2].update(kwargs)
+        self._update_hash()
 
     def eval(self, pdata: xData):
-        """ Run all steps in self._steps
+        """Run all steps in self._steps
         Parameters
         ----------
         pdata : pipelinedata.xData
@@ -223,15 +256,15 @@ class xPipeline(object):
 
         """
         if self._log_eval:
-            self._logger.info(f"Evaluating pipeline <{self.__hash__()}> with"
-                              f" data <{pdata.__hash__()}>")
+            self._logger.info(
+                f"Evaluating pipeline <{self.__hash__()}> with"
+                f" data <{pdata.__hash__()}>"
+            )
 
         if self._silent:
             for step in self._steps:
-
                 # check if early_stop is set and breakout
-                if ('early_stop' in pdata.header.keys()
-                        and pdata.header['early_stop']):
+                if "early_stop" in pdata.header.keys() and pdata.header["early_stop"]:
                     break
 
                 foo = step[1]
@@ -240,10 +273,8 @@ class xPipeline(object):
         else:
             steps_iterator = tqdm(self._steps, position=0, leave=True)
             for i, step in enumerate(steps_iterator):
-
                 # check if early_stop is set and breakout
-                if ('early_stop' in pdata.header.keys()
-                        and pdata.header['early_stop']):
+                if "early_stop" in pdata.header.keys() and pdata.header["early_stop"]:
                     break
 
                 steps_iterator.set_description(f"Processing step: {step[0]}")
@@ -266,23 +297,22 @@ class xPipeline(object):
 
 
 if __name__ == "__main__":
-
     tdata = xData(
         data=np.eye(5),
-        header={'description': 'Some data description'},
-        meta={'mean': 5},
-        name='testing_container'
+        header={"description": "Some data description"},
+        meta={"mean": 5},
+        name="testing_container",
     )
 
     def create_features(pdata):
         print("Doing something")
         return pdata
 
-    xpl = xPipeline('testp', verbose=True)
+    xpl = xPipeline("testp", verbose=True)
 
     xpl.add_steps(
-        ('test1', create_features, {}),
-        ('test2', create_features),
+        ("test1", create_features, {}),
+        ("test2", create_features),
     )
 
     xpl.eval(tdata)
